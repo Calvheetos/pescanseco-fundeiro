@@ -1,0 +1,965 @@
+<!doctype html>
+<html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+<title>Pescanseco Fundeiro</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap">
+<style>
+/* Layout: o site segue o livro. Página inicial com a aldeia; índice só com os capítulos; cada capítulo abre como no livro (foto à esquerda, sumário à direita) e depois mostra as imagens secção a secção. */
+:root{
+  --paper:#ffffff; --ink:#111111; --mute:#bdbdb8; --rule:#dcdcd7; --ink-2:#76786f; --accent:#142916; --sheet:#e3e3e3; --veil:rgba(255,255,255,.97);
+  --text:"ABC Monument Grotesk","Monument Grotesk","Geist","Helvetica Neue",Arial,sans-serif;
+  --mono:"ABC Monument Grotesk Mono","Geist Mono",ui-monospace,Menlo,monospace;
+  --gl:max(14px,env(safe-area-inset-left,0px)); --gr:max(14px,env(safe-area-inset-right,0px));
+  --row:clamp(100px,14vw,220px); --gap:6px; --bar:41px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background:var(--paper);color:var(--ink);font-family:var(--text);font-size:13px;line-height:1.3;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--paper)}
+[hidden]{display:none!important}
+a{color:inherit;text-decoration:none}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.02em;text-transform:uppercase}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;justify-content:space-between;align-items:center;gap:16px;height:var(--bar);padding-left:var(--gl);padding-right:var(--gr);background:var(--paper);border-bottom:1px solid var(--ink)}
+.bar a:hover,.bar a:focus-visible,.bar a[aria-current="page"]{color:var(--accent)}
+.bar .mid{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:640px){.bar .mid{display:none}}
+
+/* página inicial */
+.hero{position:relative;height:calc(100vh - var(--bar) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));height:calc(100svh - var(--bar) - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:360px;overflow:hidden;background:var(--paper);touch-action:pan-y}
+.hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.hero h1{position:absolute;left:var(--gl);right:var(--gr);bottom:clamp(10px,2vw,24px);margin:0;font-weight:400;font-size:clamp(64px,13.4vw,236px);line-height:.82;letter-spacing:-.055em;color:#fff;mix-blend-mode:difference;pointer-events:none;text-wrap:balance}
+.hero h1 em{font-style:italic;letter-spacing:-.06em}
+.hero .tag{position:absolute;top:16px;left:var(--gl);right:var(--gr);display:flex;justify-content:space-between;gap:16px;color:#fff;mix-blend-mode:difference;pointer-events:none}
+@media (max-width:640px){.hero .tag span:last-child{display:none}}
+
+/* índice: só os capítulos */
+.index{padding:clamp(40px,7vw,96px) var(--gr) clamp(40px,7vw,96px) var(--gl);min-height:calc(100svh - var(--bar))}
+.index-head{display:flex;justify-content:space-between;gap:16px;margin-bottom:18px;color:var(--ink-2)}
+.index ol{list-style:none;margin:0;padding:0}
+.index li a{display:flex;align-items:baseline;font-size:clamp(40px,7.6vw,128px);line-height:1;letter-spacing:-.045em;font-weight:500;color:var(--mute);transition:color .15s}
+.index li a .n{min-width:1.8em;letter-spacing:-.03em}
+.index li a em{font-style:italic;letter-spacing:-.05em}
+.index li a sup{font-family:var(--mono);font-size:11px;letter-spacing:.02em;font-weight:400;font-style:normal;vertical-align:top;margin-left:8px;color:var(--ink-2)}
+.index li a:hover,.index li a:focus-visible{color:var(--accent);outline:none}
+.index li a:hover sup,.index li a:focus-visible sup{color:var(--accent)}
+@media (hover:none){.index li a{color:var(--ink)}}
+.peek{position:fixed;z-index:15;width:clamp(180px,22vw,320px);pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.96);transition:opacity .15s,transform .15s;left:0;top:0}
+.peek.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.peek img{display:block;width:100%;height:auto}
+
+/* abertura de capítulo, como no livro */
+.opener{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);min-height:calc(100svh - var(--bar));border-bottom:1px solid var(--ink)}
+.cover{position:relative;background:var(--sheet);min-height:320px}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.toc{min-width:0;padding:clamp(24px,4vw,56px) var(--gr) clamp(32px,5vw,64px) clamp(20px,3vw,48px);display:flex;flex-direction:column;gap:clamp(28px,4vw,56px)}
+.toc h2{margin:0;font-weight:500;font-size:clamp(48px,6.4vw,112px);line-height:.9;letter-spacing:-.05em;display:flex;flex-wrap:wrap;column-gap:.28em}
+.toc h2 em{font-style:italic}
+.sub{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink);max-width:680px}
+.sub li{border-bottom:1px solid var(--rule)}
+.sub .row{display:grid;grid-template-columns:4.4em minmax(0,1fr) auto;gap:14px;align-items:baseline;padding:8px 0;font-size:clamp(13px,1.05vw,15px);line-height:1.25;text-transform:uppercase;letter-spacing:.01em}
+.sub .l2 .row{font-weight:500}
+.sub .l3 .row{font-weight:300}
+.sub .l3 .c{padding-left:1.1em}
+.sub .l3 .t{padding-left:1.4em}
+.sub .k{font-family:var(--mono);font-size:11px;font-weight:400;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.sub .off,.sub .off .k{color:var(--mute)}
+.sub a.row:hover,.sub a.row:focus-visible,.sub a.row:hover .k,.sub a.row:focus-visible .k{color:var(--accent);outline:none}
+@media (max-width:860px){
+  .opener{grid-template-columns:1fr;min-height:0}
+  .cover{aspect-ratio:4/5;max-height:72vh;min-height:0;max-width:100%}
+  .cover.blank{display:none}
+  .toc{padding-left:var(--gl)}
+}
+
+/* secções do capítulo */
+.sec{scroll-margin-top:calc(var(--bar) + env(safe-area-inset-top,0px));padding-top:clamp(40px,6vw,88px)}
+.sec.l3{padding-top:clamp(28px,4vw,56px)}
+.sec-head{display:grid;grid-template-columns:4.4em minmax(0,1fr) auto;gap:14px;align-items:baseline;margin:0 var(--gr) 12px var(--gl);padding-top:10px;border-top:1px solid var(--ink)}
+.sec-head .c,.sec-head .k{font-family:var(--mono);font-size:11px;letter-spacing:.02em;color:var(--ink-2);white-space:nowrap}
+.sec-head h3{margin:0;font-weight:500;font-size:clamp(30px,4.6vw,76px);line-height:.92;letter-spacing:-.045em;text-wrap:balance}
+.sec.l3 .sec-head{border-top-color:var(--rule)}
+.sec.l3 .sec-head h3{font-weight:400;font-size:clamp(22px,2.8vw,42px);letter-spacing:-.03em}
+.sec.parent .sec-head{margin-bottom:0}
+@media (max-width:560px){.sec-head{grid-template-columns:minmax(0,1fr) auto}.sec-head .c{grid-column:1 / -1}}
+.grid{display:flex;flex-wrap:wrap;gap:var(--gap);padding-left:var(--gl);padding-right:var(--gr)}
+.grid::after{content:"";flex-grow:999999}
+.cell{all:unset;position:relative;display:block;cursor:zoom-in;min-width:0}
+.cell i{display:block}
+.cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#f4f4f2}
+.cell:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (max-width:560px){:root{--row:86px;--gap:4px}}
+.note{margin:clamp(32px,5vw,64px) var(--gr) 0 var(--gl);color:var(--ink-2)}
+
+.pager{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:clamp(56px,8vw,112px);padding:16px var(--gr) 0 var(--gl);border-top:1px solid var(--ink)}
+.pager a{display:flex;flex-direction:column;gap:6px;font-size:clamp(26px,4vw,56px);font-weight:500;letter-spacing:-.04em;line-height:.95}
+.pager a em{font-style:italic}
+.pager a .mono{color:var(--ink-2);letter-spacing:.02em}
+.pager a:hover,.pager a:focus-visible{color:var(--accent)}
+.pager a.nx{text-align:right;align-items:flex-end}
+
+footer .author{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+footer .author:hover,footer .author:focus-visible{color:var(--accent)}
+footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px 24px;margin-top:clamp(40px,6vw,80px);padding:16px var(--gr) calc(20px + env(safe-area-inset-bottom,0px)) var(--gl);border-top:1px solid var(--ink);color:var(--ink-2)}
+
+.lb{position:fixed;inset:0;z-index:50;background:var(--veil);display:grid;grid-template-rows:auto 1fr;padding:calc(env(safe-area-inset-top,0px) + 10px) var(--gr) calc(env(safe-area-inset-bottom,0px) + 12px) var(--gl)}
+.lb .lbar{display:flex;justify-content:space-between;align-items:center;gap:12px;height:30px;color:var(--ink-2)}
+.lb .lbar span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb .lbar div{display:flex;gap:16px;flex-shrink:0}
+.lb button{all:unset;cursor:pointer;color:var(--ink)}
+.lb button:hover{color:var(--accent)}
+.lb button:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.lb .stage{display:grid;place-items:center;min-height:0;cursor:zoom-out}
+.lb img{max-width:100%;max-height:100%;object-fit:contain}
+
+/* 03.4.1 famílias: árvore interativa, nomes substituídos por códigos */
+.fxhost{margin-top:4px}
+.fx{background:var(--accent);color:#e9ede4;padding:16px var(--gr) 16px var(--gl)}
+.fx-tabs{display:flex;flex-wrap:wrap;gap:8px 26px;padding-bottom:12px;border-bottom:1px solid rgba(233,237,228,.22)}
+.fx-tab{all:unset;cursor:pointer;display:flex;align-items:baseline;gap:8px;font-size:clamp(17px,1.5vw,24px);font-weight:500;letter-spacing:-.02em;color:rgba(233,237,228,.42);transition:color .15s}
+.fx-tab .n,.fx-tab .k{font-family:var(--mono);font-size:11px;font-weight:400;letter-spacing:.02em}
+.fx-tab:hover,.fx-tab[aria-pressed="true"]{color:#fff}
+.fx-tab:focus-visible{outline:1px solid #fff;outline-offset:4px}
+.fx-bar{display:flex;justify-content:space-between;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:10px 0}
+.fx-gens,.fx-zoom{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.fx-gens .mono,.fx-zoom .mono{color:rgba(233,237,228,.6);margin-right:4px}
+.fx-bar button{all:unset;cursor:pointer;font-family:var(--mono);font-size:11px;letter-spacing:.02em;min-width:12px;height:24px;padding:0 9px;display:inline-grid;place-items:center;border:1px solid rgba(233,237,228,.35);border-radius:999px;color:#e9ede4;text-transform:uppercase}
+.fx-bar button:hover,.fx-bar button[aria-pressed="true"]{background:#e9ede4;color:var(--accent);border-color:#e9ede4}
+.fx-bar button:focus-visible{outline:1px solid #fff;outline-offset:2px}
+.fx-wrap{position:relative}
+.fx-stage{height:clamp(420px,64vh,720px);overflow:auto;cursor:grab;outline:none;scrollbar-width:thin;scrollbar-color:rgba(233,237,228,.35) transparent;overscroll-behavior-x:contain}
+.fx-stage.drag{cursor:grabbing}
+.fx-stage:focus-visible{box-shadow:inset 0 0 0 1px #fff}
+.fx-svg{display:block}
+.fx-svg .sg{stroke:rgba(233,237,228,.5);stroke-width:1;vector-effect:non-scaling-stroke}
+.fx-svg .sl{stroke:rgba(233,237,228,.75);stroke-width:1.5;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.fx-svg .cp circle{fill:none;stroke:#e9ede4;stroke-width:1.3;vector-effect:non-scaling-stroke}
+.fx-svg .dt{fill:#e9ede4}
+.fx-svg .mk{fill:rgba(233,237,228,.6);font-family:var(--mono)}
+.fx-svg .pp{cursor:pointer;outline:none}
+.fx-svg .pp .hit{fill:transparent}
+.fx-svg .pp .bg{fill:#e9ede4;opacity:0}
+.fx-svg .pp text{fill:#e9ede4;font-family:var(--mono);text-anchor:middle}
+.fx-svg .pp.unk text{fill:rgba(233,237,228,.5)}
+.fx-svg .pp:hover text,.fx-svg .pp:focus-visible text{fill:#fff}
+.fx-svg.focus .sg,.fx-svg.focus .sl,.fx-svg.focus .cp,.fx-svg.focus .dt,.fx-svg.focus .mk,.fx-svg.focus .pp{opacity:.13}
+.fx-svg.focus .on{opacity:1}
+.fx-svg.focus .sg.on{stroke:#fff;stroke-width:1.8}
+.fx-svg .pp.me .bg{opacity:1}
+.fx-svg .pp.me text{fill:var(--accent)}
+.fx-mini{position:relative;height:42px;margin-top:10px;border-top:1px solid rgba(233,237,228,.22);cursor:pointer}
+.fx-msvg{position:absolute;left:0;right:0;top:6px;bottom:0;width:100%;height:calc(100% - 6px)}
+.fx-msvg line{stroke:rgba(233,237,228,.45);stroke-width:1;vector-effect:non-scaling-stroke}
+.fx-view{position:absolute;top:6px;bottom:0;border:1px solid #e9ede4;background:rgba(233,237,228,.07);pointer-events:none}
+.fx-card{position:absolute;left:12px;bottom:12px;width:min(300px,calc(100% - 24px));background:rgba(20,41,22,.94);border:1px solid rgba(233,237,228,.22);padding:12px 14px;display:grid;gap:8px;font-size:13px;line-height:1.35}
+.fx-card .code{font-family:var(--mono);font-size:30px;line-height:1;color:#fff}
+.fx-card dl{margin:0;display:grid;grid-template-columns:5.6em minmax(0,1fr);gap:5px 10px}
+.fx-card dt{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;color:rgba(233,237,228,.6);padding-top:1px}
+.fx-card dd{margin:0;display:flex;flex-wrap:wrap;gap:4px 9px}
+.fx-card dd button{all:unset;cursor:pointer;font-family:var(--mono);font-size:12px;color:#e9ede4;border-bottom:1px solid rgba(233,237,228,.35)}
+.fx-card dd button:hover,.fx-card dd button:focus-visible{color:#fff;border-color:#fff}
+.fx-card p{margin:0;color:rgba(233,237,228,.78)}
+.fx-card .mono{color:rgba(233,237,228,.6)}
+.fx-legend{display:flex;flex-wrap:wrap;gap:6px 20px;padding-top:12px;color:rgba(233,237,228,.65)}
+.fx-legend span{display:inline-flex;align-items:center;gap:6px}
+.fx-legend svg{width:18px;height:10px;overflow:visible}
+.fx-legend svg circle{fill:none;stroke:#e9ede4;stroke-width:1.2}
+.fx-legend svg line{stroke:#e9ede4;stroke-width:1.2}
+@media (max-width:640px){.fx-card{position:static;width:auto;margin-top:10px}.fx-stage{height:56vh}}
+
+.fx-svg .names{pointer-events:none}
+.fx-svg .nm path{fill:#e9ede4}
+.fx-svg.focus .nm{opacity:.13}
+.fx-svg.focus .nm.on{opacity:1}
+.fx-svg .nm.me path{fill:var(--accent)}
+.fx-svg .pp:hover .bg{opacity:.12}
+.fx-card .code{font-family:var(--text);font-size:22px;font-weight:500;letter-spacing:-.01em;text-transform:uppercase}
+.fx-card dd button{font-family:var(--text);font-size:12px;text-transform:uppercase}
+
+.fx-card dd.un{flex-direction:column;gap:3px}
+.fx-card dd.un div{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.fx-card .ux{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.02em;color:rgba(233,237,228,.6)}
+
+/* subíndice sobreposto ao conteúdo */
+.subnav{position:fixed;top:calc(var(--bar) + env(safe-area-inset-top,0px) + 16px);left:var(--gl);z-index:15;color:#717b6e;font-family:var(--mono);font-size:11px;letter-spacing:.02em;text-transform:uppercase;line-height:1.6;max-width:min(380px,calc(100vw - 32px));pointer-events:none}
+.subnav .head,.subnav a,.subnav .tg{pointer-events:auto}
+.subnav .head{margin-bottom:8px}
+.subnav ol{list-style:none;margin:0;padding:0}
+.subnav a,.subnav .it{display:grid;grid-template-columns:4.6em minmax(0,1fr);gap:6px;color:inherit}
+.subnav .l3 a,.subnav .l3 .it{padding-left:1.2em}
+.subnav .off{opacity:.4}
+.subnav a:hover,.subnav a[aria-current]{color:var(--accent)}
+.subnav.dark a:hover,.subnav.dark a[aria-current],.subnav.dark .head{color:#e9ede4}
+.subnav.dark{text-shadow:0 0 6px rgba(20,41,22,.6)}
+.subnav .off{opacity:.55}
+.subnav a .t{text-decoration-thickness:1px;text-underline-offset:3px}
+.subnav a:hover .t,.subnav a:focus-visible .t,.subnav a[aria-current] .t{text-decoration-line:underline}
+.subnav a:focus-visible{outline:none}
+.subnav .tg{display:none}
+.panel{min-height:calc(100svh - var(--bar));padding-top:6px}
+.panel-fx{padding-top:0}
+.panel-fx .fx{padding-top:calc(var(--subh,180px) + 64px);min-height:calc(100svh - var(--bar))}
+@media (max-width:640px){
+  .subnav .tg{display:block;all:unset;cursor:pointer;color:inherit;text-transform:uppercase;pointer-events:auto}
+  .subnav .tg::after{content:" ▾"}
+  .subnav .head,.subnav ol{display:none}
+  .subnav.open .head,.subnav.open ol{display:block}
+  .subnav.open{background:none}
+  .panel-fx .fx{padding-top:56px}
+}
+
+/* páginas de texto (epílogo) */
+.txt{display:grid;grid-template-columns:minmax(0,1fr);padding:calc(var(--subh,160px) + 56px) var(--gr) clamp(56px,8vw,112px) var(--gl)}
+.txt-col{max-width:680px;min-width:0}
+.txt-c{color:var(--ink-2);margin:0 0 10px}
+.txt h2{margin:0 0 clamp(24px,3vw,40px);font-weight:500;font-size:clamp(34px,4.6vw,68px);line-height:.95;letter-spacing:-.04em;text-wrap:balance}
+.txt p{margin:0 0 1em;font-size:17px;line-height:1.55;max-width:62ch}
+.txt p.lead{font-size:clamp(20px,1.9vw,26px);line-height:1.3;letter-spacing:-.01em;margin-bottom:1.1em}
+.txt ul{margin:0 0 1.2em;padding:0;list-style:none;border-top:1px solid var(--rule)}
+.txt li{padding:10px 0;border-bottom:1px solid var(--rule);font-size:16px;line-height:1.5}
+.txt .kw{margin-top:28px;padding-top:12px;border-top:1px solid var(--ink);font-size:14px;color:var(--ink-2)}
+.txt .kw span{display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);margin-bottom:4px}
+@media (min-width:900px){.txt{grid-template-columns:min(400px,32vw) minmax(0,1fr);column-gap:clamp(24px,4vw,64px);padding-top:clamp(32px,4vw,56px)}.txt-col{grid-column:2}}
+@media (max-width:640px){.txt{padding-top:64px}}
+
+.panel-solo .grid{justify-content:center;padding-top:clamp(120px,14vh,170px);padding-bottom:48px}
+.panel-solo .grid::after{display:none}
+.panel-solo .cell img{object-fit:contain;background:#fff}
+@media (min-width:900px){.panel-solo .grid{padding-top:clamp(40px,6vh,64px);padding-left:calc(min(400px,32vw) + var(--gl))}}
+
+.flow .panel{min-height:0;scroll-margin-top:var(--bar)}
+.flow .panel-solo .grid{padding-bottom:0}
+.flow .panel-txt .txt{padding-bottom:clamp(32px,5vw,64px)}
+.flow .panel-txt+.panel-txt .txt{border-top:0;padding-top:clamp(24px,3vw,40px)}
+@media (max-width:640px){.flow .panel-txt .txt{padding-top:32px}}
+
+.reel{position:fixed;left:var(--gl);bottom:calc(34px + env(safe-area-inset-bottom,0px));width:min(300px,26vw);aspect-ratio:4/3;z-index:14;display:block;background:#f4f4f2;overflow:hidden}
+.reel img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .12s ease}
+.reel img.on{opacity:1}
+.reel-c{position:absolute;left:0;right:0;bottom:-1px;transform:translateY(100%);padding-top:6px;color:#717b6e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reel{overflow:visible}
+.reel .reel-c{background:none}
+.reel:hover .reel-c{color:var(--accent)}
+.chap[hidden] .reel{display:none}
+@media (max-width:899px){.reel{display:none}}
+@media (prefers-reduced-motion:reduce){.reel img{transition:none}}
+
+.hero .handle{position:absolute;right:var(--gr);bottom:calc(clamp(10px,2vw,24px) + 4px);z-index:2;color:#fff;mix-blend-mode:difference;text-decoration:none}
+.hero .handle:hover,.hero .handle:focus-visible{text-decoration:underline;text-underline-offset:3px}
+
+/* 00.1 zoom */
+.panel-zoom{padding-top:0}
+.zm{position:relative}
+.zm-stage{position:sticky;top:calc(var(--bar) + env(safe-area-inset-top,0px));height:calc(100svh - var(--bar));overflow:hidden;background:var(--accent)}
+.zm-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform-origin:50% 50%;will-change:transform,opacity}
+.zm-lab{position:absolute;left:var(--gl);right:var(--gr);bottom:clamp(14px,2.4vw,28px);display:flex;align-items:baseline;gap:18px;color:#fff;mix-blend-mode:difference;pointer-events:none}
+.zm-t{font-size:clamp(34px,6vw,96px);font-weight:500;letter-spacing:-.045em;line-height:.9}
+.zm-hint{position:absolute;right:var(--gr);bottom:clamp(18px,2.6vw,32px);color:#fff;mix-blend-mode:difference;transition:opacity .3s}
+.zm-bar{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.18)}
+.zm-bar span{display:block;height:100%;width:0;background:#e9ede4}
+/* 00.3 mosaico */
+.mz{padding:clamp(120px,15vh,170px) var(--gr) 40px var(--gl);display:flex;flex-direction:column;align-items:center;gap:14px;overflow:hidden}
+.mz-board{position:relative;width:min(100%,calc((100svh - var(--bar) - 120px) * var(--ar)))}
+.mz-board .mt{position:absolute;padding:0;transition:transform .9s cubic-bezier(.2,.8,.2,1);cursor:zoom-in}
+.mz-board .mt img{position:static;width:100%;height:100%;object-fit:cover;display:block}
+.mz-board.loose .mt{box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.mz-btn{all:unset;cursor:pointer;align-self:flex-end;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.02em;border:1px solid var(--ink);border-radius:999px;padding:5px 12px}
+.mz-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+@media (min-width:900px){.mz{padding-top:clamp(40px,6vh,64px);padding-left:calc(min(400px,32vw) + var(--gl))}}
+@media (prefers-reduced-motion:reduce){.mz-board .mt{transition:none}}
+
+/* 00.2 percurso */
+.panel-track{padding-top:0}
+.tk{position:relative}
+.tk-stage{position:sticky;top:calc(var(--bar) + env(safe-area-inset-top,0px));height:calc(100svh - var(--bar));overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.tk-row{display:flex;align-items:flex-end;gap:clamp(14px,2vw,28px);padding:0 30vw 0 calc(min(400px,32vw) + var(--gl));height:calc(100% - 150px);will-change:transform}
+.tk-fig{margin:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;flex:none}
+.tk-cell{position:relative;display:block;height:78%;width:auto;max-height:100%;cursor:zoom-in;opacity:.55;transition:opacity .4s,height .5s cubic-bezier(.2,.8,.2,1)}
+.tk-cell img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tk-fig.on .tk-cell{opacity:1;height:92%}
+.tk-fig figcaption{padding-top:8px;color:#717b6e}
+.tk-fig.on figcaption{color:var(--accent)}
+.tk-rule{position:relative;height:56px;margin:22px var(--gr) 18px calc(min(400px,32vw) + var(--gl));border-top:1px solid var(--ink)}
+.tk-y{position:absolute;top:0;transform:translateX(-50%)}
+.tk-y i{display:block;width:1px;height:6px;background:var(--ink);margin:0 auto}
+.tk-y b{display:block;padding-top:6px;font-weight:400;color:var(--mute)}
+.tk-y.has b{color:#717b6e}
+.tk-y.on b{color:var(--accent)}
+.tk-mk{position:absolute;top:-5px;width:9px;height:9px;border-radius:50%;background:var(--accent);transform:translateX(-50%);transition:left .35s cubic-bezier(.2,.8,.2,1)}
+.tk-big{position:absolute;right:var(--gr);top:clamp(10px,2vh,24px);font-size:clamp(72px,12vw,200px);font-weight:500;letter-spacing:-.06em;line-height:.8;color:var(--accent);pointer-events:none;font-variant-numeric:tabular-nums}
+@media (max-width:899px){.tk-row{padding-left:var(--gl);padding-right:40vw}.tk-rule{margin-left:var(--gl)}.tk-big{top:auto;bottom:96px;font-size:56px}.tk-row{height:calc(100% - 200px)}}
+
+.panel-scatter{overflow:hidden}
+.sc{display:flex;flex-direction:column;gap:14px;padding-top:clamp(120px,15vh,170px);padding-bottom:40px}
+.sc .mz-btn{margin-right:var(--gr)}
+.sc-grid .cell{transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.sc-grid.loose .cell{box-shadow:0 2px 10px rgba(0,0,0,.12)}
+@media (min-width:900px){.sc{padding-top:clamp(40px,6vh,64px)}.sc-grid{padding-left:calc(min(400px,32vw) + var(--gl))}}
+@media (prefers-reduced-motion:reduce){.sc-grid .cell{transition:none}}
+.tk-big.word{font-size:clamp(48px,7vw,120px)}
+.tk-mk.arr{background:#717b6e}
+
+/* Não pares a história */
+.foot-cta{all:unset;cursor:pointer;color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.foot-cta:hover,.foot-cta:focus-visible{color:var(--accent)}
+.hist{padding:clamp(40px,6vw,88px) var(--gr) clamp(48px,7vw,96px) var(--gl);display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(40px,6vw,80px)}
+@media (min-width:900px){.hist{grid-template-columns:minmax(0,5fr) minmax(0,7fr);column-gap:clamp(24px,4vw,64px)}}
+.hist h2{margin:0 0 18px;font-weight:500;font-size:clamp(44px,6.6vw,112px);line-height:.88;letter-spacing:-.05em}
+.hist h2 em{font-style:italic}
+.hist .lede{font-size:clamp(17px,1.5vw,20px);line-height:1.4;max-width:42ch;margin:0 0 28px;color:var(--ink)}
+.h-gate{border:1px solid var(--rule);padding:10px 12px;margin:0 0 18px;color:#717b6e;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.02em}
+#h-form{display:grid;gap:16px;max-width:560px}
+.h-field{display:grid;gap:6px}
+.h-field label,.h-check{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.02em;color:var(--ink-2)}
+.h-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:520px){.h-row{grid-template-columns:1fr}}
+#h-form input[type=text],#h-form input[type=number],#h-form select,#h-form textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:0;border-bottom:1px solid var(--ink);padding:8px 0;border-radius:0;width:100%;min-width:0}
+#h-form textarea{min-height:160px;resize:vertical;border:1px solid var(--ink);padding:10px}
+#h-form input:focus-visible,#h-form select:focus-visible,#h-form textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#h-form input[type=file]{font-family:var(--mono);font-size:11px}
+.h-prev{display:flex;gap:6px;flex-wrap:wrap}.h-prev img{width:72px;height:72px;object-fit:cover}
+.h-check{display:flex;gap:8px;align-items:flex-start;text-transform:none;font-family:var(--text);font-size:13px;letter-spacing:0;color:var(--ink)}
+.h-send{all:unset;cursor:pointer;justify-self:start;background:var(--accent);color:#e9ede4;padding:10px 18px;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.02em}
+.h-send:hover{background:var(--ink)}.h-send:disabled{opacity:.45;cursor:default}
+.h-send:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.h-msg{min-height:1.3em;margin:0;color:var(--accent)}
+.h-side h3,.contrib h3{margin:0 0 14px;padding-top:10px;border-top:1px solid var(--ink);font-weight:400;color:var(--ink-2)}
+.h-feed,.h-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:20px}
+.h-card{display:flex;flex-direction:column;gap:10px;min-width:0;border-top:1px solid var(--rule);padding-top:10px}
+.h-card header,.h-card footer{display:flex;justify-content:space-between;gap:8px;color:#717b6e}
+.h-card p{margin:0;font-size:15px;line-height:1.5;overflow-wrap:anywhere}
+.h-imgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:4px}.h-imgs img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.h-empty{color:var(--ink-2);margin:0}
+.h-q{margin-top:40px;padding:16px;border:1px solid var(--accent)}
+.h-q h3{border-top:0;padding-top:0;color:var(--accent)}
+.h-act{display:flex;gap:8px}.h-act button{all:unset;cursor:pointer;font-family:var(--mono);font-size:11px;text-transform:uppercase;border:1px solid var(--ink);padding:5px 10px}
+.h-act button[data-a=ok]{background:var(--accent);color:#e9ede4;border-color:var(--accent)}
+.h-act button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.contrib{margin:clamp(40px,6vw,80px) var(--gr) 0 var(--gl)}
+@media (min-width:900px){.contrib{margin-left:calc(min(400px,32vw) + var(--gl))}}
+
+.txt .mg{margin:6px 0 26px;padding:10px 0 10px 14px;border-left:2px solid var(--accent);font-size:14px;line-height:1.5;color:#4f554c;max-width:52ch}
+.txt .mg b{font-weight:500;color:var(--ink)}
+@media (min-width:1200px){.txt-col{position:relative}}
+
+.zm-txt{position:absolute;left:var(--gl);bottom:clamp(20px,3vw,40px);width:min(320px,calc(100% - var(--gl) - var(--gr)));height:min(58vh,560px);overflow:hidden;color:#fff;opacity:0;transition:opacity .5s ease;pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%)}
+.zm-txt.on{opacity:1}
+.zm-txt-in{padding:40px 0;will-change:transform;text-shadow:0 1px 14px rgba(0,0,0,.55),0 0 2px rgba(0,0,0,.35)}
+.zm-txt p{margin:0 0 1em;font-size:14px;line-height:1.5}
+.zm-txt .mg{margin:4px 0 22px;padding:6px 0 6px 10px;border-left:2px solid #fff;font-size:12px;line-height:1.5;color:#eef0ea}
+.zm-txt .mg b{font-weight:500}
+.zm-lab{transition:opacity .4s}
+
+.sc-txt{position:fixed;left:var(--gl);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:12;color:var(--ink);width:min(320px,calc(min(400px,32vw) - 32px))}
+.sc-txt .zm-txt-in{text-shadow:none}
+@media (max-width:899px){.sc-txt{position:static;opacity:1;height:auto;width:auto;margin:0 var(--gr) 0 var(--gl);-webkit-mask-image:none;mask-image:none;order:-1}.sc-txt .zm-txt-in{padding:0}}
+.panel-scatter .sc{position:relative}
+</style>
+
+<header class="bar mono">
+  <a href="#inicio" id="nav-home">Pescanseco Fundeiro</a>
+  <span class="mid" id="nav-mid"></span>
+  <nav><a href="#indice" id="nav-idx">Menu</a></nav>
+</header>
+
+<section class="hero view" id="inicio" aria-label="Pescanseco Fundeiro visto de cima">
+  <canvas id="px" aria-hidden="true"></canvas>
+  <div class="tag mono"><span>Carlota Alves</span><span>Mestrado em Design de Comunicação · ESAD Matosinhos</span></div>
+  <h1>A <em>terra</em></h1>
+  <a class="handle mono" href="https://calvheetos.github.io/calv_heetos/" target="_blank" rel="noopener">@calv_heetos</a>
+</section>
+
+<section class="index view" id="indice" hidden aria-label="Menu">
+  <div class="index-head mono"><span>Menu</span><span>Capítulos</span></div>
+  <ol id="idx"></ol>
+</section>
+<section class="hist view" id="historia" hidden aria-label="Não pares a história">
+  <div>
+    <h2>Não pares a <em>história</em></h2>
+    <p class="lede">Este arquivo não acaba aqui. Conta uma memória de Pescanseco Fundeiro, partilha uma fotografia antiga ou recente, diz onde ela encaixa. Cada contributo é lido antes de ser publicado no capítulo certo.</p>
+    <p class="h-gate" id="h-gate" hidden></p>
+    <form id="h-form" novalidate>
+      <div class="h-row">
+        <div class="h-field"><label for="h-nome">Como queres aparecer</label><input type="text" id="h-nome" name="nome" maxlength="80" placeholder="Nome, iniciais ou em branco"></div>
+        <div class="h-field"><label for="h-lig">Ligação à aldeia</label><select id="h-lig" name="ligacao"><option value="">—</option><option>Vive na aldeia</option><option>Filho/a ou neto/a da terra</option><option>Vem nas férias</option><option>Visitante</option><option>Outra</option></select></div>
+      </div>
+      <div class="h-row">
+        <div class="h-field"><label for="h-cap">Onde encaixa</label><select id="h-cap" name="cap"></select></div>
+        <div class="h-field"><label for="h-ano">Ano (se souberes)</label><input type="number" id="h-ano" name="ano" min="1900" max="2100" placeholder="ex. 1974"></div>
+      </div>
+      <div class="h-field"><label for="h-txt">A tua história</label><textarea id="h-txt" name="texto" maxlength="4000" required></textarea></div>
+      <div class="h-field"><label for="h-imgs">Imagens (até 4)</label><input type="file" id="h-imgs" accept="image/*" multiple><div class="h-prev" id="h-prev"></div></div>
+      <label class="h-check"><input type="checkbox" id="h-consent" name="consent" value="1"> Autorizo a publicação no site depois de revista. As pessoas que aparecem nas imagens sabem e concordam.</label>
+      <button type="submit" class="h-send">Enviar história</button>
+      <p class="h-msg mono" id="h-msg" aria-live="polite"></p>
+    </form>
+  </div>
+  <div class="h-side">
+    <h3 class="mono">Histórias publicadas</h3>
+    <div class="h-feed" id="h-feed"><p class="h-empty">A carregar…</p></div>
+    <div class="h-q" id="h-qwrap" hidden><h3 class="mono">Por rever · <span id="h-qn">0</span></h3><div class="h-feed" id="h-queue"></div></div>
+  </div>
+</section>
+<div class="peek" id="peek" aria-hidden="true"><img alt=""></div>
+
+<main id="chaps"></main>
+
+<footer class="mono" id="foot" hidden><span>Pescanseco Fundeiro</span><span><a class="author" href="https://calvheetos.github.io/calv_heetos/" target="_blank" rel="noopener">Carlota Alves</a></span><a class="foot-cta" href="#historia">Não pares a história →</a><span>ESAD Matosinhos · 2025/2026</span></footer>
+
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-label="Imagem">
+  <div class="lbar mono"><span id="cnt"></span><div><button type="button" id="prev">Anterior</button><button type="button" id="next">Seguinte</button><button type="button" id="close">Fechar</button></div></div>
+  <div class="stage" id="stage"><img id="big" alt=""></div>
+</div>
+
+<script>
+const FAM=[{"id":"veiga","t":"Família da Veiga | Neves","box":[15,56,2884,589],"h0":8,"segs":[[204.5,189.0,204.5,224.0],[661.5,294.0,661.5,324.0],[509.5,189.0,509.5,224.0],[579.5,189.0,579.5,224.0],[62.5,189.0,62.5,224.0],[486.5,294.0,486.5,324.0],[1059.5,86.0,1059.5,122.0],[834.5,86.0,834.5,122.0],[498.5,86.0,498.5,122.0],[360.5,86.0,360.5,122.0],[182.5,86.0,182.5,122.0],[1150.5,86.0,1150.5,122.0],[544.5,143.0,544.5,189.0],[1012.5,189.0,1012.5,224.0],[1094.5,143.0,1094.5,189.0],[133.5,143.0,133.5,224.0],[1070.5,244.0,1070.5,324.0],[1034.5,345.0,1034.5,425.0],[887.5,143.0,887.5,224.0],[302.5,143.0,302.5,224.0],[509.0,189.5,580.0,189.5],[1012.0,189.5,1095.0,189.5],[591.5,395.0,591.5,425.0],[661.5,395.0,661.5,425.0],[626.5,345.0,626.5,396.0],[591.0,395.5,662.0,395.5],[62.0,189.5,205.0,189.5],[486.0,294.5,1070.0,294.5],[182.0,86.5,1059.0,86.5],[1150.0,86.5,2135.0,86.5],[1198.5,169.0,1198.5,224.0],[1282.5,182.0,1282.5,224.0],[1380.5,194.0,1380.5,224.0],[1581.5,194.0,1581.5,224.0],[1847.5,194.0,1847.5,224.0],[1750.5,194.0,1750.5,224.0],[1822.5,395.0,1822.5,425.0],[1631.5,508.0,1631.5,538.0],[1456.5,508.0,1456.5,538.0],[1644.5,194.0,1644.5,224.0],[2054.5,194.0,2054.5,224.0],[1569.5,395.0,1569.5,425.0],[1754.5,395.0,1754.5,425.0],[1224.5,294.0,1224.5,324.0],[1369.5,294.0,1369.5,324.0],[1985.5,194.0,1985.5,224.0],[1501.5,395.0,1501.5,425.0],[1394.5,395.0,1394.5,425.0],[1265.5,382.0,1265.5,425.0],[1193.5,382.0,1193.5,425.0],[1156.5,294.0,1156.5,324.0],[1301.5,294.0,1301.5,324.0],[2173.5,294.0,2173.5,324.0],[1982.5,294.0,1982.5,324.0],[1744.5,294.0,1744.5,324.0],[1488.5,294.0,1488.5,324.0],[1739.5,86.0,1739.5,122.0],[1893.5,86.0,1893.5,122.0],[1982.5,86.0,1982.5,122.0],[2135.5,86.0,2135.5,122.0],[1628.5,86.0,1628.5,122.0],[1470.5,86.0,1470.5,122.0],[1789.5,345.0,1789.5,395.0],[1597.5,446.0,1597.5,508.0],[1422.5,446.0,1422.5,508.0],[1325.5,86.0,1325.5,122.0],[1772.5,143.0,1772.5,194.0],[2019.5,143.0,2019.5,194.0],[1616.5,360.0,1616.5,395.0],[1517.5,345.0,1517.5,360.0],[1425.5,243.0,1425.5,271.0],[1211.5,271.0,1211.5,294.0],[1357.5,273.0,1357.5,294.0],[1896.5,244.0,1896.5,294.0],[2147.5,345.0,2147.5,425.0],[1956.5,345.0,1956.5,425.0],[2169.5,143.0,2169.5,194.0],[1504.5,143.0,1504.5,182.0],[1547.5,244.0,1547.5,273.0],[1198.0,168.5,1360.0,168.5],[1755.0,395.5,1823.0,395.5],[1597.0,508.5,1632.0,508.5],[1422.0,508.5,1457.0,508.5],[1359.5,143.0,1359.5,169.0],[1282.0,182.5,1505.0,182.5],[1357.0,273.5,1548.0,273.5],[1380.0,194.5,1847.0,194.5],[1986.0,194.5,2054.0,194.5],[1394.0,395.5,1617.0,395.5],[1211.0,270.5,1426.0,270.5],[1157.0,294.5,1225.0,294.5],[1302.0,294.5,1370.0,294.5],[1488.0,294.5,2173.0,294.5],[1517.0,360.5,1617.0,360.5],[2353.5,143.0,2353.5,224.0],[2319.5,244.0,2319.5,324.0],[2436.5,194.0,2436.5,224.0],[2566.5,194.0,2566.5,224.0],[2826.5,194.0,2826.5,224.0],[2169.0,194.5,2826.0,194.5],[2375.5,395.0,2375.5,425.0],[2512.5,294.0,2512.5,324.0],[2653.5,294.0,2653.5,324.0],[2307.5,395.0,2307.5,425.0],[2449.5,294.0,2449.5,324.0],[2585.5,294.0,2585.5,324.0],[2341.5,345.0,2341.5,395.0],[2604.5,244.0,2604.5,294.0],[2480.5,244.0,2480.5,294.0],[2585.0,294.5,2653.0,294.5],[2308.0,395.5,2376.0,395.5],[2449.0,294.5,2513.0,294.5],[2778.5,244.0,2778.5,324.0]],"sl":[[2141.3,343.6,2152.1,328.2],[1950.3,343.6,1961.1,328.2],[1783.3,343.6,1794.1,328.2],[1512.8,343.6,1523.6,328.2],[1512.8,389.1,1523.6,373.7]],"cp":[[133.5,134.5,4.0,0],[302.5,134.0,4.0,0],[544.5,134.5,4.0,0],[887.5,134.5,4.0,0],[1094.5,134.5,4.0,0],[1359.5,134.5,4.0,0],[1504.5,133.5,4.0,0],[1772.5,133.5,4.0,0],[2019.5,134.5,4.0,0],[2169.5,134.5,4.0,0],[2353.5,134.5,4.0,0],[2604.5,234.5,4.0,0],[2778.5,234.5,4.0,0],[2318.5,235.0,4.0,0],[2480.5,235.0,4.0,0],[1070.5,235.5,4.0,0],[1425.5,235.5,4.0,0],[1547.5,235.5,4.0,0],[1896.5,235.5,4.0,0],[626.5,336.0,4.0,0],[1034.5,336.0,4.0,0],[1517.5,336.5,4.0,1],[1789.5,336.5,4.0,1],[1956.5,336.5,4.0,1],[2147.5,336.0,4.0,1],[2341.5,336.5,4.0,0],[1517.5,381.5,4.0,1],[1422.5,437.0,4.0,0],[1596.5,437.0,4.0,0]],"dots":[[2169.5,194.5,3.5],[2353.5,194.5,3.5]],"mk":[[1513.4,329.3,"1º",8.5],[1512.3,374.3,"2º",8.5]],"P":[{"c":1,"b":[[54.2,126.8,119.8,144.3]],"u":0,"g":1,"p":[],"s":[1],"k":[27],"up":[],"cp":[0],"n":"ADRIANO SANTOS VEIGA"},{"c":2,"b":[[148.7,127.3,214.3,143.8]],"u":0,"g":1,"p":[],"s":[0],"k":[27],"up":[10,28],"cp":[0],"n":"MARIA AMÉLIA SANTOS VEIGA"},{"c":3,"b":[[277.5,130.8,288.5,139.3]],"u":1,"g":1,"p":[],"s":[3],"k":[29],"up":[],"cp":[1],"n":"(?)"},{"c":4,"b":[[322.0,126.8,398.0,143.3]],"u":0,"g":1,"p":[],"s":[2],"k":[29],"up":[9,28],"cp":[1],"n":"MARIA LEONTINA SANTOS VEIGA"},{"c":5,"b":[[465.2,126.8,530.8,144.3]],"u":0,"g":1,"p":[],"s":[6],"k":[30,31],"up":[8,28],"cp":[2],"n":"ANTÓNIO SANTOS VEIGA"},{"c":7,"b":[[793.3,126.8,873.7,144.3]],"u":0,"g":1,"p":[],"s":[8],"k":[32],"up":[7,28],"cp":[3],"n":"JÓSE SANTOS DA VEIGA"},{"c":6,"b":[[558.5,131.3,569.5,139.8]],"u":1,"g":1,"p":[],"s":[4],"k":[30,31],"up":[],"cp":[2],"n":"(?)"},{"c":9,"b":[[1039.7,126.8,1080.9,144.3]],"u":0,"g":1,"p":[],"s":[10],"k":[33],"up":[6,28],"cp":[4],"n":"MANUEL DA VEIGA"},{"c":8,"b":[[901.4,131.3,971.6,139.8]],"u":0,"g":1,"p":[],"s":[5],"k":[32],"up":[],"cp":[3],"n":"MARIA RAFAELA"},{"c":11,"b":[[1305.2,126.8,1345.8,144.3]],"u":0,"g":1,"p":[],"s":[12],"k":[35],"up":[29,65],"cp":[5],"n":"AFONSO MARTINS"},{"c":10,"b":[[1108.4,127.3,1192.6,143.8]],"u":0,"g":1,"p":[],"s":[7],"k":[33],"up":[11,29],"cp":[4],"n":"MARIA DO CÉU MARTINS DA VEIGA"},{"c":13,"b":[[1450.2,125.8,1490.8,143.3]],"u":0,"g":1,"p":[],"s":[14],"k":[36],"up":[29,61],"cp":[6],"n":"ALBANO MARTINS"},{"c":12,"b":[[1373.5,131.3,1405.5,139.8]],"u":0,"g":1,"p":[],"s":[9],"k":[35],"up":[],"cp":[5],"n":"FÁTIMA"},{"c":15,"b":[[1595.4,127.8,1660.6,144.3]],"u":0,"g":1,"p":[],"s":[],"k":[],"up":[29,60],"cp":[],"n":"MARIA DO CÉU MARTINS"},{"c":14,"b":[[1518.1,130.3,1539.9,138.8]],"u":0,"g":1,"p":[],"s":[11],"k":[36],"up":[],"cp":[6],"n":"DINA"},{"c":16,"b":[[1716.0,125.8,1759.0,143.3]],"u":0,"g":1,"p":[],"s":[16],"k":[37,40,41,42,43],"up":[29,56],"cp":[7],"n":"JOSÉ (ZÉ) MARTINS"},{"c":17,"b":[[1786.2,126.3,1826.8,142.8]],"u":0,"g":1,"p":[],"s":[15],"k":[37,40,41,42,43],"up":[],"cp":[7],"n":"CELESTE MARTINS"},{"c":18,"b":[[1871.1,126.8,1914.9,143.3]],"u":0,"g":1,"p":[],"s":[],"k":[],"up":[29,57],"cp":[],"n":"ADELAIDE MARTINS"},{"c":19,"b":[[1959.5,126.8,2005.5,144.3]],"u":0,"g":1,"p":[],"s":[19],"k":[20,21],"up":[29,58],"cp":[8],"n":"ARMANDO MARTINS"},{"c":20,"b":[[2033.3,131.3,2069.7,139.8]],"u":0,"g":1,"p":[],"s":[18],"k":[20,21],"up":[],"cp":[8],"n":"OLÍMPIA"},{"c":44,"b":[[1972.3,232.8,1997.7,241.3]],"u":0,"g":2,"p":[18,19],"s":[],"k":[],"up":[45,67,87],"cp":[],"n":"EDÍTE"},{"c":45,"b":[[2039.3,232.8,2068.7,241.3]],"u":0,"g":2,"p":[18,19],"s":[],"k":[],"up":[40,67,87],"cp":[],"n":"PAULA"},{"c":21,"b":[[2114.4,126.8,2155.6,144.3]],"u":0,"g":1,"p":[],"s":[23],"k":[47,49,51],"up":[29,59],"cp":[9],"n":"ANTÓNIO MARTINS"},{"c":22,"b":[[2183.4,131.3,2253.6,139.8]],"u":0,"g":1,"p":[],"s":[22],"k":[47,49,51],"up":[],"cp":[9],"n":"MARIA CELESTE"},{"c":23,"b":[[2298.4,126.8,2339.6,144.3]],"u":0,"g":1,"p":[],"s":[25],"k":[45],"up":[],"cp":[10],"n":"ANTÓNIO MARTINS"},{"c":24,"b":[[2367.4,131.3,2437.6,139.8]],"u":0,"g":1,"p":[],"s":[24],"k":[45],"up":[],"cp":[10],"n":"MARIA CELESTE"},{"c":25,"b":[[45.5,232.8,77.5,241.3]],"u":0,"g":2,"p":[],"s":[],"k":[],"up":[4,26],"cp":[],"n":"FÁTIMA"},{"c":26,"b":[[108.3,232.8,157.7,241.3]],"u":0,"g":2,"p":[0,1],"s":[],"k":[],"up":[15],"cp":[],"n":"FERNANDO"},{"c":27,"b":[[191.2,232.8,217.8,241.3]],"u":0,"g":2,"p":[],"s":[],"k":[],"up":[0,26],"cp":[],"n":"VITOR"},{"c":28,"b":[[278.4,232.8,326.6,241.3]],"u":0,"g":2,"p":[2,3],"s":[],"k":[],"up":[19],"cp":[],"n":"FERNANDA"},{"c":29,"b":[[493.3,232.8,522.7,241.3]],"u":0,"g":2,"p":[4,6],"s":[],"k":[],"up":[2,12,20],"cp":[],"n":"PAULO"},{"c":30,"b":[[568.4,232.8,592.6,241.3]],"u":0,"g":2,"p":[4,6],"s":[],"k":[],"up":[3,12,20],"cp":[],"n":"OLGA"},{"c":31,"b":[[870.1,232.8,903.9,241.3]],"u":0,"g":2,"p":[5,8],"s":[],"k":[],"up":[18],"cp":[],"n":"TONITO"},{"c":32,"b":[[972.4,227.8,1056.6,245.3]],"u":0,"g":2,"p":[7,10],"s":[34],"k":[53,55,57],"up":[13,14,21],"cp":[15],"n":"ISABEL MARTINS DA VEIGA"},{"c":33,"b":[[1084.5,232.3,1095.5,240.8]],"u":1,"g":2,"p":[],"s":[33],"k":[53,55,57],"up":[],"cp":[15],"n":"(?)"},{"c":34,"b":[[1191.1,232.8,1205.9,241.3]],"u":0,"g":2,"p":[9,12],"s":[],"k":[],"up":[30,79,83],"cp":[],"n":"RUI"},{"c":35,"b":[[1266.1,232.8,1297.9,241.3]],"u":0,"g":2,"p":[11,14],"s":[],"k":[],"up":[31,77,84],"cp":[],"n":"DANIEL"},{"c":36,"b":[[1348.1,227.8,1411.9,245.3]],"u":0,"g":2,"p":[15,16],"s":[38],"k":[58,59,60,62],"up":[32,66,86],"cp":[16],"n":"MARIA AMÉLIA MARTINS"},{"c":37,"b":[[1439.1,232.3,1474.9,240.8]],"u":0,"g":2,"p":[],"s":[37],"k":[58,59,60,62],"up":[],"cp":[16],"n":"CARLOS"},{"c":38,"b":[[1505.5,232.3,1533.5,240.8]],"u":0,"g":2,"p":[],"s":[40],"k":[],"up":[],"cp":[17],"n":"ESTER"},{"c":39,"b":[[1561.4,228.3,1602.6,244.8]],"u":0,"g":2,"p":[15,16],"s":[39],"k":[],"up":[33,66,86],"cp":[17],"n":"ANTÓNIO MARTINS"},{"c":40,"b":[[1632.2,232.3,1655.8,240.8]],"u":0,"g":2,"p":[15,16],"s":[],"k":[],"up":[39,66,86],"cp":[],"n":"ZECA"},{"c":41,"b":[[1718.1,232.3,1781.9,240.8]],"u":0,"g":2,"p":[15,16],"s":[],"k":[],"up":[35,66,86],"cp":[],"n":"MARIA AMÉLIA"},{"c":42,"b":[[1812.4,232.3,1882.6,240.8]],"u":0,"g":2,"p":[15,16],"s":[44],"k":[61,63,67,69],"up":[34,66,86],"cp":[18],"n":"MARIA CELESTE"},{"c":43,"b":[[1910.3,228.3,1939.7,244.8]],"u":0,"g":2,"p":[],"s":[43],"k":[61,63,67,69],"up":[],"cp":[18],"n":"JOÃO NEVES"},{"c":47,"b":[[2332.4,227.8,2373.6,244.3]],"u":0,"g":2,"p":[24,25],"s":[46],"k":[70],"up":[94],"cp":[13],"n":"ANTÓNIO (TONITO)"},{"c":46,"b":[[2293.5,231.8,2304.5,240.3]],"u":1,"g":2,"p":[],"s":[45],"k":[70],"up":[],"cp":[13],"n":"(?)"},{"c":48,"b":[[2406.0,231.8,2467.0,240.3]],"u":0,"g":2,"p":[22,23],"s":[48],"k":[91,92],"up":[76,96,99],"cp":[14],"n":"MARIA ELVIRA"},{"c":49,"b":[[2494.1,231.8,2508.9,240.3]],"u":0,"g":2,"p":[],"s":[47],"k":[91,92],"up":[],"cp":[14],"n":"RUI"},{"c":50,"b":[[2541.1,231.3,2590.9,239.8]],"u":0,"g":2,"p":[22,23],"s":[50],"k":[93,94],"up":[76,97,99],"cp":[11],"n":"ANA MARIA"},{"c":51,"b":[[2633.5,227.3,2671.5,243.8]],"u":0,"g":2,"p":[],"s":[49],"k":[93,94],"up":[],"cp":[11],"n":"MANUEL VARELA"},{"c":53,"b":[[2799.1,227.3,2853.9,243.8]],"u":0,"g":2,"p":[22,23],"s":[52],"k":[95],"up":[76,98,99],"cp":[12],"n":"ZÉ ANTÓNIO VARELA"},{"c":52,"b":[[2719.2,231.3,2764.8,239.8]],"u":0,"g":2,"p":[],"s":[51],"k":[95],"up":[],"cp":[12],"n":"FILOMENA"},{"c":54,"b":[[465.4,328.8,506.6,345.3]],"u":0,"g":3,"p":[33,34],"s":[],"k":[],"up":[5,16,27],"cp":[],"n":"MÓNICA DA VEIGA"},{"c":55,"b":[[588.2,332.8,612.9,341.3]],"u":0,"g":3,"p":[],"s":[55],"k":[73,74],"up":[],"cp":[19],"n":"NARA"},{"c":56,"b":[[640.4,328.8,681.6,345.3]],"u":0,"g":3,"p":[33,34],"s":[54],"k":[73,74],"up":[1,16,27],"cp":[19],"n":"FILIPE DA VEIGA"},{"c":57,"b":[[993.4,332.8,1020.6,341.3]],"u":0,"g":3,"p":[],"s":[57],"k":[75],"up":[],"cp":[20],"n":"NANCY"},{"c":58,"b":[[1048.4,328.8,1089.6,345.3]],"u":0,"g":3,"p":[33,34],"s":[56],"k":[75],"up":[16],"cp":[20],"n":"MIGUEL DA VEIGA"},{"c":59,"b":[[1139.0,333.8,1176.0,342.3]],"u":0,"g":3,"p":[37,38],"s":[],"k":[],"up":[50,70,71,89,90],"cp":[],"n":"SANDRA"},{"c":60,"b":[[1213.4,333.8,1239.6,342.3]],"u":0,"g":3,"p":[37,38],"s":[],"k":[],"up":[43,70,71,89,90],"cp":[],"n":"FILIPE"},{"c":61,"b":[[1295.2,333.8,1308.8,342.3]],"u":0,"g":3,"p":[37,38],"s":[],"k":[],"up":[51,70,72,89,91],"cp":[],"n":"???"},{"c":63,"b":[[1474.3,328.8,1503.7,346.3]],"u":0,"g":3,"p":[43,44],"s":[64,72],"k":[78,81,82],"up":[55,73,92],"cp":[21,26],"n":"JOÃO NEVES"},{"c":62,"b":[[1358.3,333.8,1381.7,342.3]],"u":0,"g":3,"p":[37,38],"s":[],"k":[],"up":[44,70,72,89,91],"cp":[],"n":"TOZÉ"},{"c":65,"b":[[1712.1,328.8,1775.9,346.3]],"u":0,"g":3,"p":[43,44],"s":[65],"k":[85,86],"up":[54,73,92],"cp":[22],"n":"MARIA AMÉLIA NEVES"},{"c":64,"b":[[1531.4,333.3,1570.6,341.8]],"u":0,"g":3,"p":[],"s":[61],"k":[78,81,82],"up":[],"cp":[21],"n":"PATRÍCIA"},{"c":66,"b":[[1803.1,333.3,1822.9,341.8]],"u":0,"g":3,"p":[],"s":[63],"k":[85,86],"up":[],"cp":[22],"n":"LUÍS"},{"c":67,"b":[[1917.2,328.8,1942.8,346.3]],"u":0,"g":3,"p":[],"s":[67],"k":[87],"up":[],"cp":[23],"n":"ANA MOTA"},{"c":68,"b":[[1970.3,329.3,1999.7,345.8]],"u":0,"g":3,"p":[43,44],"s":[66],"k":[87],"up":[53,73,92],"cp":[23],"n":"NUNO NEVES"},{"c":69,"b":[[2094.4,332.8,2133.6,341.3]],"u":0,"g":3,"p":[],"s":[69],"k":[88],"up":[],"cp":[24],"n":"PATRÍCIA"},{"c":70,"b":[[2161.1,328.8,2192.9,345.3]],"u":0,"g":3,"p":[43,44],"s":[68],"k":[88],"up":[52,73,92],"cp":[24],"n":"DANIEL NEVES"},{"c":71,"b":[[2311.0,333.3,2328.0,341.8]],"u":0,"g":3,"p":[45,46],"s":[71],"k":[89,90],"up":[95],"cp":[25],"n":"EVA"},{"c":72,"b":[[2355.5,333.3,2366.5,341.8]],"u":1,"g":3,"p":[],"s":[70],"k":[89,90],"up":[],"cp":[25],"n":"(?)"},{"c":78,"b":[[1531.0,378.3,1574.9,386.8]],"u":0,"g":3,"p":[],"s":[61],"k":[],"up":[],"cp":[26],"n":"CATARINA"},{"c":79,"b":[[575.5,433.8,605.5,442.3]],"u":0,"g":4,"p":[54,55],"s":[],"k":[],"up":[22,24,25],"cp":[],"n":"LAURA"},{"c":80,"b":[[650.3,433.8,675.7,442.3]],"u":0,"g":4,"p":[54,55],"s":[],"k":[],"up":[23,24,25],"cp":[],"n":"ALICE"},{"c":81,"b":[[1016.2,433.8,1052.8,442.3]],"u":0,"g":4,"p":[56,57],"s":[],"k":[],"up":[17],"cp":[],"n":"LEONOR"},{"c":82,"b":[[1168.2,429.8,1217.8,447.3]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[49],"cp":[],"n":"MADALENA NEVES"},{"c":83,"b":[[1246.5,429.8,1282.5,447.3]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[48],"cp":[],"n":"MARTIM NEVES"},{"c":84,"b":[[1379.3,429.3,1408.7,446.8]],"u":0,"g":4,"p":[61,64],"s":[79],"k":[80],"up":[47,68,69,88,93],"cp":[27],"n":"DIOGO NEVES"},{"c":85,"b":[[1436.5,433.8,1447.5,442.3]],"u":1,"g":4,"p":[],"s":[78],"k":[80],"up":[],"cp":[27],"n":"(?)"},{"c":95,"b":[[1442.1,541.8,1474.9,559.3]],"u":0,"g":5,"p":[78,79],"s":[],"k":[],"up":[38,64,82],"cp":[],"n":"SOPHIE NEVES"},{"c":86,"b":[[1476.0,429.8,1525.0,447.3]],"u":0,"g":4,"p":[61,64],"s":[],"k":[],"up":[46,68,69,88,93],"cp":[],"n":"BERNARDO NEVES"},{"c":87,"b":[[1553.3,429.3,1582.7,446.8]],"u":0,"g":4,"p":[61,64],"s":[83],"k":[84],"up":[41,68,69,88,93],"cp":[28],"n":"JOÃO NEVES"},{"c":88,"b":[[1610.0,433.8,1647.0,442.3]],"u":0,"g":4,"p":[],"s":[82],"k":[84],"up":[],"cp":[28],"n":"SANDRA"},{"c":96,"b":[[1617.3,541.8,1646.7,559.3]],"u":0,"g":5,"p":[82,83],"s":[],"k":[],"up":[37,63,81],"cp":[],"n":"MIA NEVES"},{"c":89,"b":[[1739.0,433.8,1770.0,442.3]],"u":0,"g":4,"p":[63,65],"s":[],"k":[],"up":[42,62,80],"cp":[],"n":"MARTA"},{"c":90,"b":[[1810.3,433.8,1837.7,442.3]],"u":0,"g":4,"p":[63,65],"s":[],"k":[],"up":[36,62,80],"cp":[],"n":"TIAGO"},{"c":91,"b":[[1940.4,433.8,1972.6,442.3]],"u":0,"g":4,"p":[66,67],"s":[],"k":[],"up":[75],"cp":[],"n":"TOMÁS"},{"c":92,"b":[[2124.2,433.8,2168.8,442.3]],"u":0,"g":4,"p":[68,69],"s":[],"k":[],"up":[74],"cp":[],"n":"GONÇALO"},{"c":93,"b":[[2298.5,433.8,2313.5,442.3]],"u":0,"g":4,"p":[70,71],"s":[],"k":[],"up":[103,106,110],"cp":[],"n":"IVO"},{"c":94,"b":[[2360.2,433.8,2386.8,442.3]],"u":0,"g":4,"p":[70,71],"s":[],"k":[],"up":[100,106,110],"cp":[],"n":"DAVID"},{"c":73,"b":[[2429.4,333.8,2468.6,342.3]],"u":0,"g":3,"p":[47,48],"s":[],"k":[],"up":[104,108,111],"cp":[],"n":"PATRÍCIA"},{"c":74,"b":[[2499.3,333.8,2525.7,342.3]],"u":0,"g":3,"p":[47,48],"s":[],"k":[],"up":[101,108,111],"cp":[],"n":"SOFIA"},{"c":75,"b":[[2563.0,329.8,2607.0,347.3]],"u":0,"g":3,"p":[49,50],"s":[],"k":[],"up":[105,107,109],"cp":[],"n":"CATARINA VARELA"},{"c":76,"b":[[2637.4,329.8,2671.7,347.3]],"u":0,"g":3,"p":[49,50],"s":[],"k":[],"up":[102,107,109],"cp":[],"n":"PEDRO VARELA"},{"c":77,"b":[[2766.5,333.8,2790.5,342.3]],"u":0,"g":3,"p":[51,52],"s":[],"k":[],"up":[112],"cp":[],"n":"JOÃO"}],"grp":[{"m":[26,28],"s":[0,4,26]},{"m":[1,3,4,5,7],"s":[6,7,8,9,10,28]},{"m":[9,10,11,13,15,17,18,22],"s":[11,29,56,57,58,59,60,61,65]},{"m":[77],"s":[48]},{"m":[76],"s":[49]}]},{"id":"neves","t":"Neves | Fernandes","box":[9,56,1318,478],"h0":14,"segs":[[471.5,86.0,471.5,122.0],[271.5,86.0,271.5,122.0],[152.5,86.0,152.5,122.0],[1151.5,86.0,1151.5,122.0],[967.5,86.0,967.5,122.0],[651.5,86.0,651.5,122.0],[152.0,86.5,1151.0,86.5],[558.5,189.0,558.5,224.0],[857.5,294.0,857.5,324.0],[503.5,189.0,503.5,224.0],[902.5,189.0,902.5,224.0],[917.5,294.0,917.5,324.0],[1080.5,294.0,1080.5,324.0],[1249.5,395.0,1249.5,425.0],[1111.5,395.0,1111.5,425.0],[1178.5,395.0,1178.5,425.0],[973.5,395.0,973.5,425.0],[1046.5,345.0,1046.5,425.0],[1171.5,294.0,1171.5,324.0],[1191.5,143.0,1191.5,224.0],[1087.5,189.0,1087.5,224.0],[1010.5,143.0,1010.5,190.0],[1042.5,243.0,1042.5,294.0],[1287.5,336.0,1287.5,395.0],[1236.5,243.0,1236.5,294.0],[1111.0,395.5,1288.0,395.5],[503.0,189.5,1010.0,189.5],[857.0,294.5,1043.0,294.5],[974.0,395.5,1046.0,395.5],[1256.0,335.5,1288.0,335.5],[1080.0,294.5,1237.0,294.5],[1087.0,189.5,1192.0,189.5],[171.5,189.0,171.5,224.0],[315.5,189.0,315.5,224.0],[282.5,171.0,282.5,189.0],[354.5,244.0,354.5,324.0],[391.5,124.0,391.5,189.0],[171.0,189.5,283.0,189.5],[315.0,189.5,392.0,189.5],[282.0,170.5,291.0,170.5],[334.0,124.5,391.0,124.5]],"sl":[[1193.3,344.6,1204.1,329.2]],"cp":[[123.5,134.5,4.0,0],[618.5,134.5,4.0,0],[1010.5,134.5,4.0,0],[1191.5,134.5,4.0,0],[300.5,135.5,4.0,0],[1207.5,169.0,4.0,0],[301.5,170.5,4.0,0],[354.5,235.5,4.0,0],[1042.5,235.5,4.0,0],[1235.5,235.5,4.0,0],[382.5,336.5,4.0,0],[1046.5,336.5,4.0,0],[1199.5,336.5,4.0,1],[1198.0,372.5,4.0,0]],"dots":[],"mk":[[297.4,129.8,"1º",14.0],[296.3,164.8,"2º",14.0],[1193.9,331.8,"1º",14.0],[1192.8,366.8,"2º",14.0]],"P":[{"c":1,"b":[[39.4,127.2,109.6,141.2]],"u":0,"g":1,"p":[],"s":[1],"k":[],"up":[],"cp":[0],"n":"MARIA CELESTE"},{"c":2,"b":[[137.3,123.2,166.7,145.2]],"u":0,"g":1,"p":[],"s":[0],"k":[],"up":[2,6],"cp":[0],"n":"JOÃO NEVES"},{"c":14,"b":[[131.1,228.8,209.9,242.8]],"u":0,"g":2,"p":[3,12],"s":[],"k":[],"up":[32,34,37,39],"cp":[],"n":"CARLOS ALBERTO"},{"c":3,"b":[[255.3,123.8,286.7,146.8]],"u":0,"g":1,"p":[],"s":[5,12],"k":[2,13],"up":[1,6],"cp":[4,6],"n":"JOSÉ NUNES"},{"c":6,"b":[[450.4,127.3,491.6,141.3]],"u":0,"g":1,"p":[],"s":[],"k":[],"up":[0,6],"cp":[],"n":"FLISBELA"},{"c":4,"b":[[314.5,128.3,325.5,142.3]],"u":1,"g":1,"p":[],"s":[3],"k":[13],"up":[],"cp":[4],"n":"(?)"},{"c":7,"b":[[551.2,122.8,604.8,145.8]],"u":0,"g":1,"p":[],"s":[8],"k":[],"up":[],"cp":[1],"n":"JOSÉ DE ALMEIDA"},{"c":9,"b":[[936.0,122.8,997.0,145.8]],"u":0,"g":1,"p":[],"s":[11],"k":[15,19,20],"up":[4,6],"cp":[2],"n":"MARIA ELVIRA NUNES"},{"c":8,"b":[[632.2,127.3,673.8,141.3]],"u":0,"g":1,"p":[],"s":[6],"k":[],"up":[5,6],"cp":[1],"n":"LOURDES"},{"c":12,"b":[[1205.4,122.8,1275.6,145.8]],"u":0,"g":1,"p":[],"s":[10],"k":[23,24],"up":[],"cp":[3],"n":"MARIA CELESTE NEVES"},{"c":11,"b":[[1124.2,123.3,1177.8,145.3]],"u":0,"g":1,"p":[],"s":[9,14],"k":[23,24],"up":[3,6],"cp":[3,5],"n":"ANTÓNIO FERNANDES"},{"c":10,"b":[[1024.5,127.3,1035.5,141.3]],"u":1,"g":1,"p":[],"s":[7],"k":[15,19,20],"up":[],"cp":[2],"n":"(?)"},{"c":5,"b":[[315.4,159.8,375.6,181.8]],"u":0,"g":1,"p":[],"s":[3],"k":[2],"up":[],"cp":[6],"n":"ANUNCIAÇÃO NUNES"},{"c":15,"b":[[287.3,223.8,340.7,246.8]],"u":0,"g":2,"p":[3,5],"s":[16],"k":[17],"up":[33,36,38,40],"cp":[7],"n":"JOSÉ AGUSTINHO"},{"c":13,"b":[[1221.2,162.3,1267.8,176.3]],"u":0,"g":1,"p":[],"s":[10],"k":[],"up":[],"cp":[5],"n":"FELISBELA"},{"c":17,"b":[[487.4,223.8,517.6,237.8]],"u":0,"g":2,"p":[7,11],"s":[],"k":[],"up":[9,21,26],"cp":[],"n":"PEDRO"},{"c":16,"b":[[368.4,228.3,388.6,242.3]],"u":0,"g":2,"p":[],"s":[13],"k":[17],"up":[],"cp":[7],"n":"INÊS"},{"c":24,"b":[[341.1,329.3,368.9,343.3]],"u":0,"g":3,"p":[13,16],"s":[18],"k":[],"up":[35],"cp":[10],"n":"SÓNIA"},{"c":25,"b":[[396.5,329.3,407.5,343.3]],"u":1,"g":3,"p":[],"s":[17],"k":[],"up":[],"cp":[10],"n":"(?)"},{"c":18,"b":[[544.3,223.8,571.7,237.8]],"u":0,"g":2,"p":[7,11],"s":[],"k":[],"up":[7,21,26],"cp":[],"n":"TIAGO"},{"c":19,"b":[[882.1,223.8,921.9,237.8]],"u":0,"g":2,"p":[7,11],"s":[],"k":[],"up":[10,21,26],"cp":[],"n":"RICARDO"},{"c":26,"b":[[845.5,329.8,869.5,343.8]],"u":0,"g":3,"p":[22,23],"s":[],"k":[],"up":[8,22,27],"cp":[],"n":"JOÃO"},{"c":20,"b":[[1003.5,228.3,1028.5,242.3]],"u":0,"g":2,"p":[],"s":[23],"k":[21,28],"up":[],"cp":[8],"n":"JÚLIA"},{"c":21,"b":[[1056.4,223.8,1117.6,246.8]],"u":0,"g":2,"p":[9,10],"s":[22],"k":[21,28],"up":[19,20,31],"cp":[8],"n":"JOSÉ CARLOS FERNANDES"},{"c":22,"b":[[1161.2,223.8,1221.9,246.8]],"u":0,"g":2,"p":[9,10],"s":[33],"k":[25,26],"up":[19],"cp":[9],"n":"MARIA ODETE FERNANDES"},{"c":29,"b":[[1060.1,325.3,1099.9,347.3]],"u":0,"g":3,"p":[24,33],"s":[27],"k":[29,30],"up":[12,24,30],"cp":[11],"n":"RICARDO NUNES"},{"c":30,"b":[[1156.3,324.8,1185.7,347.8]],"u":0,"g":3,"p":[24,33],"s":[34,35],"k":[31,32,36],"up":[18,24,30],"cp":[12,13],"n":"JOÃO NEVES"},{"c":28,"b":[[1021.5,329.3,1032.5,343.3]],"u":1,"g":3,"p":[],"s":[25],"k":[29,30],"up":[],"cp":[11],"n":"(?)"},{"c":27,"b":[[902.4,329.8,932.6,343.8]],"u":0,"g":3,"p":[22,23],"s":[],"k":[],"up":[11,22,27],"cp":[],"n":"PEDRO"},{"c":33,"b":[[947.4,429.8,998.6,443.8]],"u":0,"g":4,"p":[25,27],"s":[],"k":[],"up":[16,17,28],"cp":[],"n":"FRANCISCA"},{"c":34,"b":[[1031.3,429.8,1059.6,443.8]],"u":0,"g":4,"p":[25,27],"s":[],"k":[],"up":[17],"cp":[],"n":"MARIA"},{"c":35,"b":[[1094.3,433.8,1124.6,447.8]],"u":0,"g":4,"p":[26,34],"s":[],"k":[],"up":[14,23,25,29],"cp":[],"n":"(MICO)"},{"c":36,"b":[[1159.2,429.8,1196.8,443.8]],"u":0,"g":4,"p":[26,34],"s":[],"k":[],"up":[15,23,25,29],"cp":[],"n":"AFONSO"},{"c":23,"b":[[1249.1,224.3,1284.9,246.3]],"u":0,"g":2,"p":[],"s":[24],"k":[25,26],"up":[],"cp":[9],"n":"CARLOS NUNES"},{"c":31,"b":[[1213.2,329.3,1249.8,343.3]],"u":0,"g":3,"p":[],"s":[26],"k":[31,32,36],"up":[],"cp":[12],"n":"MÓNICA"},{"c":32,"b":[[1213.5,365.3,1252.8,379.3]],"u":0,"g":3,"p":[],"s":[26],"k":[],"up":[],"cp":[13],"n":"PATRÍCIA"},{"c":37,"b":[[1229.3,429.8,1267.7,443.8]],"u":0,"g":4,"p":[26,34],"s":[],"k":[],"up":[13,23,25,29],"cp":[],"n":"MATILDE"}],"grp":[{"m":[1,3,4,7,8,10],"s":[0,1,2,3,4,5,6]}]},{"id":"almeida","t":"Almeida | Neves | Alves","box":[-4,90,2307,747],"h0":14,"segs":[[236.5,143.0,236.5,189.0],[313.5,189.0,313.5,224.0],[182.5,189.0,182.5,224.0],[498.5,189.0,498.5,224.0],[604.5,189.0,604.5,224.0],[384.5,189.0,384.5,224.0],[1026.5,189.0,1026.5,214.0],[954.5,189.0,954.5,214.0],[662.5,189.0,662.5,224.0],[69.5,294.0,69.5,324.0],[166.5,294.0,166.5,324.0],[255.5,294.0,255.5,324.0],[364.5,294.0,364.5,324.0],[464.5,294.0,464.5,324.0],[905.5,287.0,905.5,317.0],[1010.5,287.0,1010.5,317.0],[887.5,539.0,887.5,569.0],[986.5,539.0,986.5,569.0],[1166.5,539.0,1166.5,569.0],[144.5,539.0,144.5,569.0],[259.5,539.0,259.5,569.0],[477.5,539.0,477.5,569.0],[625.5,428.0,625.5,458.0],[508.5,428.0,508.5,458.0],[407.5,428.0,407.5,458.0],[386.5,588.0,386.5,618.0],[379.0,618.5,387.0,618.5],[379.0,587.5,387.0,587.5],[326.5,428.0,326.5,458.0],[235.5,428.0,235.5,458.0],[1161.5,428.0,1161.5,458.0],[1080.5,428.0,1080.5,458.0],[999.5,428.0,999.5,458.0],[1105.5,287.0,1105.5,317.0],[1199.5,287.0,1199.5,317.0],[1306.5,287.0,1306.5,317.0],[544.5,294.0,544.5,324.0],[628.5,294.0,628.5,324.0],[450.5,143.0,450.5,189.0],[1116.5,143.0,1116.5,189.0],[344.5,244.0,344.5,294.0],[961.5,143.0,961.5,189.0],[985.5,242.0,985.5,287.0],[849.5,479.0,849.5,539.0],[836.5,595.0,836.5,655.0],[1035.5,595.0,1035.5,655.0],[1215.5,595.0,1215.5,655.0],[526.5,595.0,526.5,655.0],[316.5,625.0,316.5,655.0],[854.5,348.0,854.5,428.0],[182.0,189.5,314.0,189.5],[384.0,189.5,498.0,189.5],[69.0,294.5,629.0,294.5],[1026.0,189.5,1144.0,189.5],[604.0,189.5,962.0,189.5],[905.0,287.5,1307.0,287.5],[144.0,539.5,1166.0,539.5],[316.0,655.5,1548.0,655.5],[236.0,428.5,1161.0,428.5],[1679.0,177.5,1760.0,177.5],[1548.0,133.5,1571.0,133.5],[1548.0,268.5,1571.0,268.5],[1548.0,377.5,1571.0,377.5],[1548.0,486.5,1571.0,486.5],[1548.0,595.5,1571.0,595.5],[1759.0,640.5,1943.0,640.5],[1759.0,508.5,1943.0,508.5],[2166.0,348.5,2182.0,348.5],[2166.0,389.5,2182.0,389.5],[1759.0,266.5,1943.0,266.5],[1759.0,310.5,1943.0,310.5],[2128.0,623.5,2167.0,623.5],[2110.0,499.5,2182.0,499.5],[2110.0,541.5,2182.0,541.5],[2128.0,580.5,2167.0,580.5],[2166.0,704.5,2182.0,704.5],[2166.0,664.5,2182.0,664.5],[2166.0,131.5,2175.0,131.5],[2164.0,176.5,2173.0,176.5],[2164.0,214.5,2173.0,214.5],[2166.0,264.5,2175.0,264.5],[2166.0,305.5,2175.0,305.5],[1759.0,177.5,1943.0,177.5],[1759.0,131.5,1943.0,131.5],[1678.5,169.0,1678.5,178.0],[1759.0,376.5,1943.0,376.5],[1759.0,683.5,1943.0,683.5],[1759.0,551.5,1943.0,551.5],[1759.0,419.5,1943.0,419.5],[1759.0,595.5,1943.0,595.5],[1759.0,463.5,1943.0,463.5],[1548.0,704.5,1571.0,704.5],[1548.5,133.0,1548.5,704.0],[1759.5,595.0,1759.5,684.0],[2166.5,335.0,2166.5,390.0],[1759.5,463.0,1759.5,552.0],[2166.5,131.0,2166.5,158.0],[1759.5,266.0,1759.5,311.0],[2164.5,176.0,2164.5,215.0],[2166.5,264.0,2166.5,306.0],[2127.5,580.0,2127.5,664.0],[2109.5,499.0,2109.5,619.0],[2166.5,664.0,2166.5,709.0],[1759.5,132.0,1759.5,177.0],[1759.5,376.0,1759.5,420.0],[2005.0,335.5,2167.0,335.5],[2006.0,157.5,2167.0,157.5],[1679.0,292.5,1760.0,292.5],[2004.0,202.5,2165.0,202.5],[2038.0,290.5,2167.0,290.5],[2005.0,709.5,2167.0,709.5],[2005.0,664.5,2128.0,664.5],[2005.0,619.5,2110.0,619.5],[2004.5,318.0,2004.5,336.0],[1679.0,401.5,1760.0,401.5],[2006.5,140.0,2006.5,158.0],[1679.0,510.5,1760.0,510.5],[1679.0,619.5,1760.0,619.5],[1678.5,275.0,1678.5,293.0],[2004.5,185.0,2004.5,203.0],[2038.5,273.0,2038.5,291.0],[2004.5,692.0,2004.5,710.0],[2004.5,647.0,2004.5,665.0],[2004.5,602.0,2004.5,620.0],[1678.5,493.0,1678.5,511.0],[1678.5,384.0,1678.5,402.0],[1678.5,602.0,1678.5,620.0]],"sl":[[1998.8,427.6,2009.6,412.2],[1998.8,318.6,2009.6,303.2]],"cp":[[236.5,134.5,4.0,0],[450.5,134.5,4.0,0],[961.5,134.5,4.0,0],[1116.5,134.5,4.0,0],[1678.5,133.5,4.0,0],[2006.5,133.5,4.0,0],[1678.5,163.0,4.0,0],[2004.5,177.5,4.0,0],[344.5,235.5,4.0,0],[984.5,235.5,4.0,0],[2038.5,266.5,4.0,0],[1678.5,268.5,4.0,0],[2004.5,310.5,4.0,1],[854.5,341.0,4.0,0],[1678.5,377.5,4.0,0],[2004.5,419.5,4.0,1],[2004.5,463.5,4.0,0],[849.5,472.5,4.0,0],[1678.5,486.5,4.0,0],[2004.5,507.5,4.0,0],[2004.5,551.5,4.0,0],[316.5,588.5,4.0,0],[526.5,588.5,4.0,0],[836.5,588.5,4.0,0],[1035.5,588.5,4.0,0],[1215.5,588.5,4.0,0],[1678.5,595.5,4.0,0],[2004.5,595.5,4.0,0],[316.5,618.0,4.0,0],[2004.5,639.5,4.0,0],[2004.5,683.5,4.0,0]],"dots":[[1548.5,133.5,3.5],[1548.5,268.5,3.5],[1548.5,377.5,3.5],[1548.5,486.5,3.5],[1548.5,595.5,3.5],[1531.0,655.0,5.0],[316.5,655.5,3.5],[526.5,655.5,3.5],[836.5,655.5,3.5],[1035.5,655.5,3.5],[1215.5,655.5,3.5],[1548.5,704.5,3.5]],"mk":[[1674.3,125.7,"2º",6.2],[1674.4,155.2,"1º",6.2],[312.3,580.7,"2º",6.2],[312.4,610.2,"1º",6.2]],"P":[{"c":1,"b":[[164.4,122.8,222.6,145.8]],"u":0,"g":1,"p":[],"s":[2],"k":[8,17],"up":[],"cp":[0],"n":"JOSÉ DOS SANTOS"},{"c":3,"b":[[383.2,122.8,436.8,145.8]],"u":0,"g":1,"p":[],"s":[4],"k":[9,10],"up":[],"cp":[1],"n":"JOSÉ DE ALMEIDA"},{"c":2,"b":[[261.5,123.3,326.5,145.3]],"u":0,"g":1,"p":[],"s":[0],"k":[8,17],"up":[],"cp":[0],"n":"MARIA BARATA DOS SANTOS"},{"c":5,"b":[[905.2,122.8,947.8,145.8]],"u":0,"g":1,"p":[],"s":[5],"k":[11,20,21],"up":[],"cp":[2],"n":"MANUEL VENTURA"},{"c":4,"b":[[464.1,123.3,532.9,145.3]],"u":0,"g":1,"p":[],"s":[1],"k":[9,10],"up":[],"cp":[1],"n":"MARIA ROSÁLIA DE ALMEIDA"},{"c":6,"b":[[975.3,123.3,1003.6,145.3]],"u":0,"g":1,"p":[],"s":[3],"k":[11,20,21],"up":[],"cp":[2],"n":"LUÍZA MARIA"},{"c":7,"b":[[1049.2,122.8,1102.8,145.8]],"u":0,"g":1,"p":[],"s":[7],"k":[16,22],"up":[],"cp":[3],"n":"JOSÉ DE ALMEIDA"},{"c":8,"b":[[1130.1,123.3,1198.9,145.3]],"u":0,"g":1,"p":[],"s":[6],"k":[16,22],"up":[],"cp":[3],"n":"MARIA ROSÁLIA DE ALMEIDA"},{"c":16,"b":[[296.4,223.8,330.6,246.8]],"u":0,"g":2,"p":[0,2],"s":[9],"k":[25,26,27,30,31,63],"up":[0,1,50],"cp":[8],"n":"EMILIA BARATA"},{"c":17,"b":[[358.1,224.3,407.9,246.3]],"u":0,"g":2,"p":[1,4],"s":[8],"k":[25,26,27,30,31,63],"up":[5,38,51],"cp":[8],"n":"ANTÓNIO D’ ALMEIDA"},{"c":18,"b":[[490.1,226.4,504.9,245.0]],"u":1,"g":2,"p":[1,4],"s":[],"k":[],"up":[3,38,51],"cp":[],"n":"(?)"},{"c":19,"b":[[596.1,226.4,610.9,245.0]],"u":1,"g":2,"p":[3,5],"s":[],"k":[],"up":[4,41,54],"cp":[],"n":"(?)"},{"c":33,"b":[[2020.0,126.3,2039.0,140.3]],"u":0,"g":3,"p":[],"s":[18],"k":[13],"up":[],"cp":[5],"n":"ANA"},{"c":67,"b":[[2182.2,119.7,2221.8,145.5]],"u":0,"g":4,"p":[12,18],"s":[],"k":[],"up":[77,96,106,115],"cp":[],"n":"RICHARD ALMEIDA"},{"c":34,"b":[[1951.4,165.8,1990.6,188.8]],"u":0,"g":3,"p":[62,75],"s":[15],"k":[19,64],"up":[59,82,84],"cp":[7],"n":"MANUEL ALMEIDA"},{"c":35,"b":[[2018.3,168.2,2046.7,185.0]],"u":0,"g":3,"p":[],"s":[14],"k":[19,64],"up":[],"cp":[7],"n":"MARIA"},{"c":14,"b":[[1145.1,179.4,1159.9,198.0]],"u":1,"g":2,"p":[6,7],"s":[],"k":[],"up":[39,53],"cp":[],"n":"(?)"},{"c":15,"b":[[174.1,226.4,188.9,245.0]],"u":1,"g":2,"p":[0,2],"s":[],"k":[],"up":[0,2,50],"cp":[],"n":"(?)"},{"c":32,"b":[[1951.4,121.8,1992.6,144.8]],"u":0,"g":3,"p":[62,75],"s":[12],"k":[13],"up":[59,83,84,103],"cp":[5],"n":"ANTÓNIO ALMEIDA"},{"c":69,"b":[[2182.4,201.7,2221.6,227.5]],"u":0,"g":4,"p":[14,15],"s":[],"k":[],"up":[79,98,108,119],"cp":[],"n":"ALEX ALMEIDA"},{"c":20,"b":[[640.2,223.8,682.8,246.8]],"u":0,"g":2,"p":[3,5],"s":[],"k":[],"up":[8,41,54],"cp":[],"n":"MANUEL VENTURA"},{"c":21,"b":[[942.3,223.8,970.6,246.8]],"u":0,"g":2,"p":[3,5],"s":[22],"k":[33,34,35,36,39],"up":[7,41,54],"cp":[9],"n":"MARIA LUÍZA"},{"c":22,"b":[[998.2,224.3,1051.8,246.3]],"u":0,"g":2,"p":[6,7],"s":[21],"k":[33,34,35,36,39],"up":[6,39,53],"cp":[9],"n":"JOSÉ FERNANDES"},{"c":36,"b":[[1951.3,254.8,2024.6,277.8]],"u":0,"g":3,"p":[44,45],"s":[37],"k":[57,59],"up":[69,97,107,118],"cp":[10],"n":"ANTÓNIO JORGE ALMEIDA ALVES"},{"c":38,"b":[[1951.4,298.8,1990.6,321.8]],"u":0,"g":3,"p":[44,45],"s":[38],"k":[58,61],"up":[70,97,107,118],"cp":[12],"n":"ADÍLIA ALMEIDA"},{"c":40,"b":[[26.4,324.8,111.6,347.8]],"u":0,"g":3,"p":[8,9],"s":[],"k":[],"up":[9,40,52],"cp":[],"n":"MANUEL D’ALMEIDA SANTOS"},{"c":41,"b":[[139.2,324.8,192.8,347.8]],"u":0,"g":3,"p":[8,9],"s":[],"k":[],"up":[10,40,52],"cp":[],"n":"JOSÉ DE ALMEIDA"},{"c":42,"b":[[229.0,324.8,281.0,347.8]],"u":0,"g":3,"p":[8,9],"s":[],"k":[],"up":[11,40,52],"cp":[],"n":"FRANCISCO D’ ALMEIDA"},{"c":74,"b":[[198.4,460.8,271.6,483.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[29,49,58],"cp":[],"n":"MARIA DO ESPÍRITO SANTO"},{"c":25,"b":[[100.0,576.8,188.0,599.8],[1584.0,692.8,1672.0,715.8]],"u":0,"g":2,"p":[46,48],"s":[],"k":[],"up":[19,43,56],"cp":[],"n":"ANTÓNIO AUGUSTO NEVES ALMEIDA"},{"c":43,"b":[[317.6,324.8,410.4,347.8]],"u":0,"g":3,"p":[8,9],"s":[],"k":[],"up":[12,40,52],"cp":[],"n":"ANTÓNIO DE ALMEIDA SANTOS"},{"c":45,"b":[[517.2,324.8,570.8,347.8]],"u":0,"g":3,"p":[8,9],"s":[],"k":[],"up":[36,40,52],"cp":[],"n":"ANA DE ALMEIDA"},{"c":46,"b":[[782.4,324.8,840.6,356.8]],"u":0,"g":3,"p":[],"s":[33],"k":[28,40,42,43,50,52,54],"up":[],"cp":[13],"n":"JOAQUIM D’ALMEIDA DOS SANTOS"},{"c":47,"b":[[868.4,329.8,941.6,351.8]],"u":0,"g":3,"p":[21,22],"s":[32],"k":[28,40,42,43,50,52,54],"up":[14,42,55],"cp":[13],"n":"MARIA DO ESPÍRITO SANTO"},{"c":48,"b":[[995.8,324.8,1024.1,347.8]],"u":0,"g":3,"p":[21,22],"s":[],"k":[],"up":[15,42,55],"cp":[],"n":"MARIA LUÍZA"},{"c":49,"b":[[1078.2,324.8,1131.8,347.8]],"u":0,"g":3,"p":[21,22],"s":[],"k":[],"up":[33,42,55],"cp":[],"n":"MANUEL FERNANDES"},{"c":50,"b":[[1171.7,324.8,1225.3,347.8]],"u":0,"g":3,"p":[21,22],"s":[],"k":[],"up":[34,42,55],"cp":[],"n":"JOSÉ FERNANDES"},{"c":37,"b":[[2052.0,254.8,2116.0,277.8]],"u":0,"g":3,"p":[],"s":[23],"k":[57,59],"up":[],"cp":[10],"n":"MARIA EUNICE ALVES"},{"c":39,"b":[[2018.1,296.7,2060.9,321.8]],"u":0,"g":3,"p":[],"s":[24],"k":[58,61],"up":[],"cp":[12],"n":"JÚLIO PACHECO"},{"c":51,"b":[[1269.2,324.8,1342.8,347.8]],"u":0,"g":3,"p":[21,22],"s":[],"k":[],"up":[35,42,55],"cp":[],"n":"BÁRBARA MARIA DE JESUS"},{"c":75,"b":[[299.2,460.8,352.8,483.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[28,49,58],"cp":[],"n":"CONCEIÇÃO DE ALMEIDA"},{"c":13,"b":[[1692.3,126.3,1720.6,140.3],[330.3,581.3,358.6,595.3]],"u":0,"g":2,"p":[],"s":[62],"k":[],"up":[],"cp":[4,21],"n":"MARIA"},{"c":76,"b":[[380.2,460.8,433.8,492.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[24,49,58],"cp":[],"n":"JOSÉ DE ALMEIDA SANTOS"},{"c":77,"b":[[461.1,460.8,553.9,483.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[23,49,58],"cp":[],"n":"GUILHERMINA JESUS DE ALMEIDA"},{"c":23,"b":[[1593.5,256.8,1664.5,279.8],[441.5,576.8,512.5,599.8]],"u":0,"g":2,"p":[46,48],"s":[45],"k":[23,24],"up":[21,43,56],"cp":[11,22],"n":"MARIA ALICE NEVES ALMEIDA"},{"c":24,"b":[[1692.4,256.8,1733.6,279.8],[540.4,576.8,581.6,599.8]],"u":0,"g":2,"p":[],"s":[44],"k":[23,24],"up":[],"cp":[11,22],"n":"ANTÓNIO ALVES"},{"c":9,"b":[[782.2,460.8,835.8,483.8]],"u":0,"g":1,"p":[],"s":[48],"k":[29,44,49,51,55,62],"up":[],"cp":[17],"n":"CARLOS DE ALMEIDA"},{"c":26,"b":[[793.1,581.3,822.9,595.3],[1692.1,370.3,1721.9,384.3]],"u":0,"g":2,"p":[],"s":[49],"k":[60,65],"up":[],"cp":[14,23],"n":"ODETE"},{"c":10,"b":[[863.5,461.3,944.5,483.3]],"u":0,"g":1,"p":[],"s":[46],"k":[29,44,49,51,55,62],"up":[],"cp":[17],"n":"MARIA ASSUNÇÃO NEVES"},{"c":27,"b":[[850.3,576.8,922.7,599.8],[1592.3,365.8,1664.7,388.8]],"u":0,"g":2,"p":[46,48],"s":[47],"k":[60,65],"up":[16,43,56],"cp":[14,23],"n":"JOSÉ SALVADOR NEVES ALMEIDA"},{"c":78,"b":[[972.2,460.8,1025.8,483.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[32,49,58],"cp":[],"n":"ANTÓNIO DE ALMEIDA"},{"c":28,"b":[[950.5,576.8,1021.5,599.8],[1593.5,474.8,1664.5,497.8]],"u":0,"g":2,"p":[46,48],"s":[53],"k":[67,68,71],"up":[17,43,56],"cp":[18,24],"n":"ORLANDO NEVES ALMEIDA"},{"c":79,"b":[[1053.2,460.8,1106.8,483.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[31,49,58],"cp":[],"n":"AMÉLIA DE ALMEIDA"},{"c":29,"b":[[1049.2,581.3,1102.8,595.3],[1692.2,479.3,1745.8,493.3]],"u":0,"g":2,"p":[],"s":[51],"k":[67,68,71],"up":[],"cp":[18,24],"n":"CONCEIÇÃO"},{"c":80,"b":[[1134.2,460.8,1187.8,483.8]],"u":0,"g":4,"p":[32,33],"s":[],"k":[],"up":[30,49,58],"cp":[],"n":"JOSÉ DE ALMEIDA"},{"c":30,"b":[[1130.5,576.8,1201.5,599.8],[1593.5,583.8,1664.5,606.8]],"u":0,"g":2,"p":[46,48],"s":[56],"k":[73,76,78],"up":[18,43,56],"cp":[25,26],"n":"JOSÉ CARLOS NEVES ALMEIDA"},{"c":31,"b":[[1229.2,581.3,1272.8,595.3],[1692.2,588.3,1735.8,602.3]],"u":0,"g":2,"p":[],"s":[55],"k":[73,76,78],"up":[],"cp":[25,26],"n":"GRACIETE"},{"c":71,"b":[[2189.2,295.8,2246.8,318.8]],"u":0,"g":4,"p":[23,37],"s":[],"k":[],"up":[81,99,109,120],"cp":[],"n":"ANA BEATRIZ ALVES"},{"c":72,"b":[[2189.5,334.7,2262.5,360.5]],"u":0,"g":4,"p":[24,38],"s":[],"k":[],"up":[67,94,105,113],"cp":[],"n":"INÊS ALVES PACHECO"},{"c":70,"b":[[2182.1,252.7,2253.9,277.8]],"u":0,"g":4,"p":[23,37],"s":[],"k":[],"up":[80,99,109,120],"cp":[],"n":"ALVES CARLOTA MARIA"},{"c":52,"b":[[1951.4,363.8,1990.6,386.8]],"u":0,"g":3,"p":[47,49],"s":[],"k":[],"up":[85,104,114,125],"cp":[],"n":"NUNO ALMEIDA"},{"c":73,"b":[[2189.0,375.7,2277.0,401.5]],"u":0,"g":4,"p":[24,38],"s":[],"k":[],"up":[68,94,105,113],"cp":[],"n":"AUGUSTO ANTÓNIO ALVES PACHECO"},{"c":11,"b":[[1577.0,121.8,1665.0,144.8],[215.0,576.8,303.0,599.8]],"u":0,"g":2,"p":[46,48],"s":[41,75],"k":[14,18],"up":[20,43,56],"cp":[4,6,21,28],"n":"ANTÓNIO AUGUSTO NEVES ALMEIDA"},{"c":44,"b":[[449.4,324.8,478.6,347.8]],"u":0,"g":3,"p":[8,9],"s":[],"k":[],"up":[13,40,52],"cp":[],"n":"MARIA EMÍLIA"},{"c":68,"b":[[2182.4,162.8,2221.6,186.5]],"u":0,"g":4,"p":[14,15],"s":[],"k":[],"up":[78,98,108,119],"cp":[],"n":"ALMEIDA DAVID"},{"c":53,"b":[[1951.4,407.8,1990.6,430.8]],"u":0,"g":3,"p":[47,49],"s":[66],"k":[],"up":[88,104,114,125],"cp":[15],"n":"JORGE ALMEIDA"},{"c":54,"b":[[2018.5,412.3,2029.5,426.3]],"u":1,"g":3,"p":[],"s":[65],"k":[],"up":[],"cp":[15],"n":"(?)"},{"c":55,"b":[[1951.4,451.8,1990.6,474.8]],"u":0,"g":3,"p":[51,53],"s":[70],"k":[],"up":[90,95,116,124],"cp":[16],"n":"ODETE ALMEIDA"},{"c":57,"b":[[1951.4,495.8,1990.6,518.8]],"u":0,"g":3,"p":[51,53],"s":[69],"k":[],"up":[66,116,124],"cp":[19],"n":"CELIA ALMEIDA"},{"c":58,"b":[[2018.4,493.7,2057.6,518.8]],"u":0,"g":3,"p":[],"s":[68],"k":[],"up":[],"cp":[19],"n":"RUTE ALMEIDA"},{"c":56,"b":[[2018.4,449.7,2057.6,474.8]],"u":0,"g":3,"p":[],"s":[67],"k":[],"up":[],"cp":[16],"n":"ALMEIDA JOSÉ"},{"c":59,"b":[[1951.4,537.7,1990.6,562.8]],"u":0,"g":3,"p":[51,53],"s":[72],"k":[],"up":[87,95,116,124],"cp":[20],"n":"BELA ALMEIDA"},{"c":60,"b":[[2018.4,538.2,2057.6,563.0]],"u":0,"g":3,"p":[],"s":[71],"k":[],"up":[],"cp":[20],"n":"BET ALMEIDA"},{"c":61,"b":[[1949.3,581.7,1990.7,606.8]],"u":0,"g":3,"p":[55,56],"s":[74],"k":[80,81],"up":[89,93,117,126],"cp":[27],"n":"CRISTINA ALMEIDA"},{"c":62,"b":[[2018.4,581.7,2057.6,606.8]],"u":0,"g":3,"p":[],"s":[73],"k":[80,81],"up":[],"cp":[27],"n":"JOSÉ ALMEIDA"},{"c":12,"b":[[1692.0,155.8,1738.2,169.8],[330.0,610.8,376.2,624.8]],"u":0,"g":2,"p":[],"s":[62],"k":[14,18],"up":[],"cp":[6,28],"n":"GRACINDA"},{"c":63,"b":[[1951.4,625.7,1990.6,650.8]],"u":0,"g":3,"p":[55,56],"s":[77],"k":[82,83],"up":[65,93,117,126],"cp":[29],"n":"PAULO ALMEIDA"},{"c":64,"b":[[2018.4,625.7,2057.6,650.8]],"u":0,"g":3,"p":[],"s":[76],"k":[82,83],"up":[],"cp":[29],"n":"RUTE ALMEIDA"},{"c":65,"b":[[1951.4,669.7,1990.6,694.8]],"u":0,"g":3,"p":[55,56],"s":[79],"k":[84,85],"up":[86,93,117,126],"cp":[30],"n":"DAVID ALMEIDA"},{"c":66,"b":[[2018.4,670.2,2057.6,695.0]],"u":0,"g":3,"p":[],"s":[78],"k":[84,85],"up":[],"cp":[30],"n":"BET ALMEIDA"},{"c":81,"b":[[2189.1,487.8,2229.9,511.5]],"u":0,"g":4,"p":[73,74],"s":[],"k":[],"up":[72,101,112,123],"cp":[],"n":"ANA RITA ALMEIDA"},{"c":82,"b":[[2189.1,528.8,2243.9,552.5]],"u":0,"g":4,"p":[73,74],"s":[],"k":[],"up":[73,101,112,123],"cp":[],"n":"JOSÉ PAULO ALMEIDA"},{"c":83,"b":[[2189.2,567.7,2234.8,593.5]],"u":0,"g":4,"p":[76,77],"s":[],"k":[],"up":[74,100,111,122],"cp":[],"n":"CAROLINA ALMEIDA"},{"c":84,"b":[[2189.1,608.7,2241.9,634.5]],"u":0,"g":4,"p":[76,77],"s":[],"k":[],"up":[71,100,111,122],"cp":[],"n":"MARGARIDA ALMEIDA"},{"c":85,"b":[[2189.4,649.7,2228.6,675.5]],"u":0,"g":4,"p":[78,79],"s":[],"k":[],"up":[76,102,110,121],"cp":[],"n":"DANIEL ALMEIDA"},{"c":86,"b":[[2189.3,690.7,2228.7,716.5]],"u":0,"g":4,"p":[78,79],"s":[],"k":[],"up":[75,102,110,121],"cp":[],"n":"RAFAELA ALMEIDA"}],"grp":[]},{"id":"barata","t":"Barata | Fernandes","box":[2,56,1347,574],"h0":13,"segs":[[463.5,86.0,463.5,122.0],[1064.5,92.0,1064.5,122.0],[307.5,86.0,307.5,122.0],[908.5,92.0,908.5,122.0],[115.5,86.0,115.5,122.0],[556.5,92.0,556.5,122.0],[888.5,189.0,888.5,224.0],[182.5,189.0,182.5,224.0],[262.5,189.0,262.5,224.0],[505.5,143.0,505.5,189.0],[337.5,189.0,337.5,224.0],[849.5,244.0,849.5,294.0],[505.0,189.5,888.0,189.5],[270.5,143.0,270.5,189.0],[57.5,143.0,57.5,224.0],[849.0,294.5,1137.0,294.5],[182.0,189.5,337.0,189.5],[867.5,294.0,867.5,324.0],[1137.5,294.0,1137.5,324.0],[115.0,86.5,463.0,86.5],[556.0,92.5,1064.0,92.5],[1296.5,395.0,1296.5,425.0],[1200.5,395.0,1200.5,425.0],[788.5,395.0,788.5,425.0],[1116.5,492.0,1116.5,522.0],[863.5,395.0,863.5,425.0],[1191.5,492.0,1191.5,522.0],[1116.0,492.5,1191.0,492.5],[1255.5,341.0,1255.5,395.0],[1031.5,376.0,1031.5,425.0],[826.5,345.0,826.5,395.0],[1154.5,445.0,1154.5,492.0],[1200.0,395.5,1296.0,395.5],[1031.0,376.5,1153.0,376.5],[788.0,395.5,863.0,395.5],[1238.0,340.5,1256.0,340.5]],"sl":[[1170.3,348.6,1181.1,333.2]],"cp":[[57.5,135.0,4.0,0],[271.5,135.0,4.0,0],[505.5,135.0,4.0,0],[849.5,235.5,4.0,0],[826.5,336.5,4.0,0],[1176.5,340.5,4.0,1],[1176.0,375.5,4.0,0],[1154.5,436.5,4.0,0]],"dots":[],"mk":[[1171.9,334.5,"1º",13.2],[1170.8,369.5,"2º",13.2]],"P":[{"c":1,"b":[[32.5,128.4,43.5,141.5]],"u":1,"g":1,"p":[],"s":[1],"k":[2],"up":[],"cp":[0],"n":"(?)"},{"c":2,"b":[[71.0,128.4,159.0,141.5]],"u":0,"g":1,"p":[],"s":[0],"k":[2],"up":[4,19],"cp":[0],"n":"ANTÓNIO AUGUSTO"},{"c":9,"b":[[38.4,229.4,75.6,242.5]],"u":0,"g":2,"p":[0,1],"s":[],"k":[],"up":[14],"cp":[],"n":"MICLINA"},{"c":3,"b":[[246.5,128.4,257.5,141.5]],"u":1,"g":1,"p":[],"s":[5],"k":[4,6,10],"up":[],"cp":[1],"n":"(?)"},{"c":10,"b":[[164.4,224.4,198.6,246.5]],"u":0,"g":2,"p":[3,5],"s":[],"k":[],"up":[7,13,16],"cp":[],"n":"ZÉ BARATA"},{"c":4,"b":[[285.4,128.4,331.6,141.5]],"u":0,"g":1,"p":[],"s":[3],"k":[4,6,10],"up":[2,19],"cp":[1],"n":"GRACINDA"},{"c":11,"b":[[229.4,224.4,294.6,246.5]],"u":0,"g":2,"p":[3,5],"s":[],"k":[],"up":[8,13,16],"cp":[],"n":"MARIA DO CÉU BARATA"},{"c":5,"b":[[419.3,128.4,491.7,141.5]],"u":0,"g":1,"p":[],"s":[8],"k":[14],"up":[0,19],"cp":[2],"n":"MARIA BÁRBARA"},{"c":6,"b":[[519.5,124.4,591.5,145.5]],"u":0,"g":1,"p":[],"s":[7],"k":[14],"up":[5,20],"cp":[2],"n":"ANTÓNIO MARIA FERNANDES"},{"c":7,"b":[[881.2,124.4,934.8,145.5]],"u":0,"g":1,"p":[],"s":[],"k":[],"up":[3,20],"cp":[],"n":"MANUEL FERNANDES"},{"c":12,"b":[[319.0,224.4,357.0,246.5]],"u":0,"g":2,"p":[3,5],"s":[],"k":[],"up":[10,13,16],"cp":[],"n":"MANUEL BARATA"},{"c":13,"b":[[800.3,224.4,835.7,246.5]],"u":0,"g":2,"p":[],"s":[14],"k":[15,16],"up":[],"cp":[3],"n":"HELENA GOMES"},{"c":15,"b":[[783.3,329.9,812.7,343.0]],"u":0,"g":3,"p":[],"s":[15],"k":[17,18],"up":[],"cp":[4],"n":"PAULA"},{"c":8,"b":[[1019.4,124.4,1108.6,145.5]],"u":0,"g":1,"p":[],"s":[],"k":[],"up":[1,20],"cp":[],"n":"MARIA DOS SANTOS FERNANDES"},{"c":14,"b":[[863.2,224.9,916.8,246.0]],"u":0,"g":2,"p":[7,8],"s":[11],"k":[15,16],"up":[6,9,12],"cp":[3],"n":"JOSÉ FERNANDES"},{"c":16,"b":[[840.2,325.9,893.8,347.0]],"u":0,"g":3,"p":[11,14],"s":[12],"k":[17,18],"up":[11,15,17],"cp":[4],"n":"PAULO FERNANDES"},{"c":17,"b":[[1109.2,329.4,1162.8,351.5]],"u":0,"g":3,"p":[11,14],"s":[20,21],"k":[19,23,26],"up":[11,15,18],"cp":[5,6],"n":"NUNO FERNANDES"},{"c":20,"b":[[777.4,430.4,797.6,443.5]],"u":0,"g":4,"p":[12,15],"s":[],"k":[],"up":[23,30,34],"cp":[],"n":"INÊS"},{"c":21,"b":[[844.4,430.4,880.6,443.5]],"u":0,"g":4,"p":[12,15],"s":[],"k":[],"up":[25,30,34],"cp":[],"n":"DUARTE"},{"c":22,"b":[[1017.1,430.4,1044.9,443.5]],"u":0,"g":4,"p":[16,21],"s":[],"k":[],"up":[29,33],"cp":[],"n":"NÁDIA"},{"c":18,"b":[[1190.3,333.9,1231.7,347.0]],"u":0,"g":3,"p":[],"s":[16],"k":[23,26],"up":[],"cp":[5],"n":"CRISTINA"},{"c":19,"b":[[1190.0,368.9,1217.8,382.0]],"u":0,"g":3,"p":[],"s":[16],"k":[19],"up":[],"cp":[6],"n":"SÓNIA"},{"c":23,"b":[[1089.3,425.4,1140.7,447.5]],"u":0,"g":4,"p":[],"s":[23],"k":[24,25],"up":[],"cp":[7],"n":"MARIANA CASQUEIRA"},{"c":24,"b":[[1168.1,425.9,1231.9,447.0]],"u":0,"g":4,"p":[16,20],"s":[22],"k":[24,25],"up":[22,28,32,35],"cp":[7],"n":"NUNO MIGUEL FERNANDES"},{"c":26,"b":[[1089.2,522.9,1142.8,544.0]],"u":0,"g":5,"p":[22,23],"s":[],"k":[],"up":[24,27,31],"cp":[],"n":"FRANCISCA FERNANDES"},{"c":27,"b":[[1164.2,522.9,1217.8,544.0]],"u":0,"g":5,"p":[22,23],"s":[],"k":[],"up":[26,27,31],"cp":[],"n":"SALVADOR FERNANDES"},{"c":25,"b":[[1276.1,430.4,1316.9,443.5]],"u":0,"g":4,"p":[16,20],"s":[],"k":[],"up":[21,28,32,35],"cp":[],"n":"ANA RITA"}],"grp":[{"m":[1,5,7],"s":[0,2,4,19]},{"m":[8,9,13],"s":[1,3,5,20]}]},{"id":"ventura","t":"Ventura","box":[5,90,3346,772],"h0":17,"segs":[[294.5,189.0,294.5,224.0],[922.5,189.0,922.5,224.0],[639.5,395.0,639.5,425.0],[834.5,395.0,834.5,425.0],[927.5,492.0,927.5,522.0],[555.5,492.0,555.5,522.0],[994.5,492.0,994.5,522.0],[609.5,492.0,609.5,522.0],[843.5,492.0,843.5,522.0],[559.5,189.0,559.5,224.0],[449.5,395.0,449.5,425.0],[276.5,395.0,276.5,425.0],[200.5,395.0,200.5,425.0],[87.5,395.0,87.5,425.0],[340.5,395.0,340.5,425.0],[191.5,294.0,191.5,324.0],[339.5,294.0,339.5,324.0],[70.5,294.0,70.5,324.0],[639.5,294.0,639.5,324.0],[1012.5,294.0,1012.5,324.0],[907.5,294.0,907.5,324.0],[843.5,294.0,843.5,324.0],[449.5,294.0,449.5,324.0],[962.5,445.0,962.5,492.0],[483.5,345.0,483.5,395.0],[877.5,345.0,877.5,369.0],[983.5,369.0,983.5,425.0],[1077.5,369.0,1077.5,425.0],[877.0,369.5,1077.0,369.5],[310.5,355.0,310.5,395.0],[676.5,445.0,676.5,492.0],[1110.5,445.0,1110.5,522.0],[467.5,445.0,467.5,522.0],[60.5,445.0,60.5,522.0],[158.5,445.0,158.5,522.0],[319.5,143.0,319.5,189.0],[334.5,244.0,334.5,294.0],[962.5,244.0,962.5,294.0],[927.0,492.5,995.0,492.5],[450.0,395.5,835.0,395.5],[907.0,294.5,2308.0,294.5],[449.0,294.5,843.0,294.5],[87.0,395.5,341.0,395.5],[555.0,492.5,843.0,492.5],[294.0,189.5,923.0,189.5],[71.0,294.5,340.0,294.5],[1307.5,294.0,1307.5,324.0],[2128.5,294.0,2128.5,324.0],[2206.5,267.0,2206.5,324.0],[1740.5,267.0,1740.5,324.0],[1227.5,267.0,1227.5,324.0],[2027.5,294.0,2027.5,324.0],[1917.5,294.0,1917.5,324.0],[1806.5,294.0,1806.5,324.0],[1540.5,244.0,1540.5,267.0],[1620.5,294.0,1620.5,324.0],[1275.5,405.0,1275.5,435.0],[1434.5,405.0,1434.5,435.0],[2085.5,395.0,2085.5,425.0],[1599.5,405.0,1599.5,435.0],[1275.5,345.0,1275.5,405.0],[1434.5,345.0,1434.5,405.0],[2167.5,345.0,2167.5,395.0],[1434.0,405.5,1517.0,405.5],[2085.0,395.5,2168.0,395.5],[1227.0,267.5,2206.0,267.5],[1516.0,405.5,1599.0,405.5],[1332.5,454.0,1332.5,546.0],[1423.5,516.0,1423.5,546.0],[1490.5,516.0,1490.5,546.0],[1458.5,454.0,1458.5,516.0],[1989.5,542.0,1989.5,619.0],[2114.5,542.0,2114.5,619.0],[1423.0,516.5,1491.0,516.5],[2024.5,492.0,2024.5,522.0],[2091.5,492.0,2091.5,522.0],[2059.5,445.0,2059.5,492.0],[2024.0,492.5,2092.0,492.5],[2307.5,294.0,2307.5,324.0],[2379.5,294.0,2379.5,324.0],[2746.5,395.0,2746.5,425.0],[3093.5,395.0,3093.5,425.0],[3173.5,395.0,3173.5,633.0],[3173.0,436.5,3211.0,436.5],[3173.0,464.5,3211.0,464.5],[3173.0,520.5,3211.0,520.5],[3173.0,548.5,3211.0,548.5],[3173.0,576.5,3211.0,576.5],[3173.0,604.5,3211.0,604.5],[3173.0,632.5,3211.0,632.5],[3173.0,492.5,3211.0,492.5],[3173.0,395.5,3207.0,395.5],[3206.5,345.0,3206.5,395.0],[3007.5,345.0,3007.5,425.0],[2692.5,343.0,2692.5,395.0],[2692.0,395.5,2746.0,395.5],[3007.0,395.5,3093.0,395.5],[2307.5,395.0,2307.5,425.0],[2271.5,492.0,2271.5,522.0],[2696.5,491.0,2696.5,522.0],[2555.5,473.0,2555.5,522.0],[2342.5,492.0,2342.5,522.0],[2491.5,592.0,2491.5,622.0],[2582.5,592.0,2582.5,622.0],[2413.5,492.0,2413.5,522.0],[2448.5,395.0,2448.5,425.0],[2592.5,395.0,2592.5,425.0],[2342.5,343.0,2342.5,405.0],[2413.5,454.0,2413.5,516.0],[2730.5,542.0,2730.5,622.0],[2659.5,592.0,2659.5,622.0],[2582.5,542.0,2582.5,605.0],[2671.5,438.0,2671.5,492.0],[2447.5,542.0,2447.5,592.0],[2319.5,592.0,2319.5,622.0],[2319.0,592.5,2448.0,592.5],[2352.5,642.0,2352.5,722.0],[2307.0,395.5,2593.0,395.5],[2271.0,492.5,2413.0,492.5],[2659.0,592.5,2730.0,592.5],[2491.0,592.5,2582.0,592.5],[2672.0,491.5,2696.0,491.5],[2649.0,438.5,2672.0,438.5],[2555.0,472.5,2605.0,472.5],[2720.5,294.0,2720.5,324.0],[3042.5,294.0,3042.5,324.0],[3232.5,294.0,3232.5,324.0],[2860.5,294.0,2860.5,324.0],[2502.5,294.0,2502.5,324.0],[2684.5,244.0,2684.5,294.0],[2379.0,294.5,3232.0,294.5]],"sl":[[1104.3,445.6,1115.1,430.2],[461.3,444.6,472.1,429.2],[670.3,444.6,681.1,429.2],[1452.3,454.6,1463.1,439.2]],"cp":[[319.5,134.5,4.0,0],[334.5,235.5,4.0,0],[961.5,236.5,4.0,0],[1539.5,235.5,4.0,0],[2684.5,235.5,4.0,0],[310.5,336.5,4.0,0],[483.5,336.5,4.0,0],[877.5,336.5,4.0,0],[1275.5,335.5,4.0,0],[1434.5,335.5,4.0,0],[1772.5,336.5,4.0,0],[2167.5,336.5,4.0,0],[2344.5,336.5,4.0,0],[2691.5,336.5,4.0,0],[3007.5,336.5,4.0,0],[3206.5,336.5,4.0,0],[60.5,437.0,4.0,0],[158.5,437.0,4.0,0],[676.5,437.0,4.0,1],[2059.5,436.5,4.0,0],[2413.5,437.0,4.0,0],[467.5,437.5,4.0,1],[961.5,437.5,4.0,0],[1110.5,437.5,4.0,1],[1488.5,437.5,4.0,0],[1332.5,446.5,4.0,0],[1458.5,447.0,4.0,1],[1489.5,472.5,4.0,0],[2447.5,533.0,4.0,0],[1989.5,534.0,4.0,0],[2114.5,534.0,4.0,0],[2582.5,533.5,4.0,0],[2730.5,533.5,4.0,0],[2352.5,634.0,4.0,0]],"dots":[],"mk":[[1485.4,432.7,"1º",17.4],[1484.3,467.7,"2º",17.4]],"P":[{"c":1,"b":[[251.0,120.3,306.0,146.7]],"u":0,"g":1,"p":[],"s":[6],"k":[1,7,17],"up":[],"cp":[0],"n":"JOSÉ DOMINGUES"},{"c":3,"b":[[266.0,221.3,321.0,247.7]],"u":0,"g":2,"p":[0,6],"s":[8],"k":[2,9,11],"up":[0,35,44],"cp":[1],"n":"JOSÉ DOMINGUES"},{"c":12,"b":[[35.3,327.3,107.7,344.7]],"u":0,"g":3,"p":[1,8],"s":[],"k":[],"up":[17,36,45],"cp":[],"n":"PADRE ANTÓNIO"},{"c":43,"b":[[35.5,427.3,46.5,444.7]],"u":1,"g":4,"p":[],"s":[4],"k":[76],"up":[],"cp":[16],"n":"(?)"},{"c":44,"b":[[74.3,427.3,99.7,444.7]],"u":0,"g":4,"p":[],"s":[3],"k":[76],"up":[13,42],"cp":[16],"n":"EDITE"},{"c":45,"b":[[133.5,427.3,144.5,444.7]],"u":1,"g":4,"p":[],"s":[12],"k":[77],"up":[],"cp":[17],"n":"(?)"},{"c":2,"b":[[333.1,124.8,419.9,142.2]],"u":0,"g":1,"p":[],"s":[0],"k":[1,7,17],"up":[],"cp":[0],"n":"MARIA DE LOURDES"},{"c":5,"b":[[544.3,222.3,573.7,247.7]],"u":0,"g":2,"p":[0,6],"s":[],"k":[],"up":[9,35,44],"cp":[],"n":"JOÃO NEVES"},{"c":4,"b":[[348.5,225.8,359.5,243.2]],"u":1,"g":2,"p":[],"s":[1],"k":[2,9,11],"up":[],"cp":[1],"n":"(?)"},{"c":13,"b":[[157.4,327.3,224.6,344.7]],"u":0,"g":3,"p":[1,8],"s":[],"k":[],"up":[15,36,45],"cp":[],"n":"PADRE IRMANO"},{"c":14,"b":[[274.1,326.8,296.9,344.2]],"u":0,"g":3,"p":[],"s":[11],"k":[],"up":[],"cp":[5],"n":"JOSÉ"},{"c":15,"b":[[324.3,322.8,355.7,348.2]],"u":0,"g":3,"p":[1,8],"s":[10],"k":[],"up":[16,36,45],"cp":[5],"n":"ILDA NUNES"},{"c":46,"b":[[172.4,423.3,227.6,448.7]],"u":0,"g":4,"p":[],"s":[5],"k":[77],"up":[12,42],"cp":[17],"n":"MARIA DO ROSÁRIO"},{"c":47,"b":[[261.3,427.3,291.8,444.7]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[11,42],"cp":[],"n":"ISABEL"},{"c":48,"b":[[325.1,427.3,357.9,444.7]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[14,42],"cp":[],"n":"RAFAEL"},{"c":16,"b":[[427.2,322.3,469.8,348.7]],"u":0,"g":3,"p":[],"s":[18],"k":[16,21,24],"up":[22,41],"cp":[6],"n":"JOSÉ VENTURA"},{"c":49,"b":[[404.3,423.3,453.7,449.7]],"u":0,"g":4,"p":[15,18],"s":[20],"k":[78],"up":[10,24,39],"cp":[21],"n":"FERNANDO MARTINS"},{"c":6,"b":[[893.0,222.3,948.0,248.7]],"u":0,"g":2,"p":[0,6],"s":[28],"k":[25,30,35,46,48,49,50,51,55],"up":[1,35,44],"cp":[2],"n":"JOSÉ DOMINGUES"},{"c":17,"b":[[497.2,326.8,520.8,344.2]],"u":0,"g":3,"p":[],"s":[15],"k":[16,21,24],"up":[],"cp":[6],"n":"SARA"},{"c":18,"b":[[614.3,322.3,663.7,348.7]],"u":0,"g":3,"p":[],"s":[],"k":[],"up":[18,41],"cp":[],"n":"FERNANDO VENTURA"},{"c":50,"b":[[481.1,427.8,522.9,445.2]],"u":0,"g":4,"p":[],"s":[16],"k":[78],"up":[],"cp":[21],"n":"ANABELA"},{"c":51,"b":[[614.4,427.3,662.6,444.7]],"u":0,"g":4,"p":[15,18],"s":[23],"k":[79,80,81],"up":[2,24,39],"cp":[18],"n":"FERNANDA"},{"c":19,"b":[[821.2,322.3,863.8,348.7]],"u":0,"g":3,"p":[],"s":[25],"k":[31,32],"up":[21,41],"cp":[7],"n":"JOÃO VENTURA"},{"c":52,"b":[[690.5,427.3,701.5,444.7]],"u":1,"g":4,"p":[],"s":[21],"k":[79,80,81],"up":[],"cp":[18],"n":"(?)"},{"c":53,"b":[[824.0,427.3,843.0,444.7]],"u":0,"g":4,"p":[15,18],"s":[],"k":[],"up":[3,24,39],"cp":[],"n":"ANA"},{"c":20,"b":[[891.3,322.8,922.7,348.2]],"u":0,"g":3,"p":[17,28],"s":[22],"k":[31,32],"up":[20,37,40],"cp":[7],"n":"MARIA NUNES"},{"c":54,"b":[[903.1,423.3,947.9,449.7]],"u":0,"g":4,"p":[],"s":[31],"k":[82,83],"up":[],"cp":[22],"n":"ANTÓNIO TRINDADE"},{"c":8,"b":[[1514.5,225.8,1525.5,243.2]],"u":1,"g":2,"p":[],"s":[45],"k":[29,47,54],"up":[],"cp":[3],"n":"(?)"},{"c":7,"b":[[975.1,226.8,1061.9,244.2]],"u":0,"g":2,"p":[],"s":[17],"k":[25,30,35,46,48,49,50,51,55],"up":[],"cp":[2],"n":"MARIA DE LOURDES"},{"c":22,"b":[[1192.2,321.3,1261.8,347.7]],"u":0,"g":3,"p":[27,45],"s":[35],"k":[36],"up":[50,54,65],"cp":[8],"n":"JOSÉ AUGUSTO FERNANDES"},{"c":21,"b":[[991.4,335.3,1032.6,352.7]],"u":0,"g":3,"p":[17,28],"s":[],"k":[],"up":[19,37,40],"cp":[],"n":"ANTÓNIO"},{"c":55,"b":[[975.3,427.8,1000.7,445.2]],"u":0,"g":4,"p":[22,25],"s":[26],"k":[82,83],"up":[25,26,28],"cp":[22],"n":"CÉLIA"},{"c":56,"b":[[1056.2,423.3,1096.8,449.7]],"u":0,"g":4,"p":[22,25],"s":[33],"k":[84],"up":[25,27,28],"cp":[23],"n":"PAULA MARTINS"},{"c":57,"b":[[1124.5,427.8,1135.5,445.2]],"u":1,"g":4,"p":[],"s":[32],"k":[84],"up":[],"cp":[23],"n":"(?)"},{"c":24,"b":[[1383.2,321.3,1420.8,347.7]],"u":0,"g":3,"p":[],"s":[38],"k":[41,53],"up":[],"cp":[9],"n":"AFONSO NUNES"},{"c":23,"b":[[1289.1,321.8,1324.9,347.2]],"u":0,"g":3,"p":[17,28],"s":[29],"k":[36],"up":[37,40,46],"cp":[8],"n":"MARÍLIA NUNES"},{"c":58,"b":[[1231.2,432.3,1318.8,458.7]],"u":0,"g":4,"p":[29,35],"s":[37],"k":[86],"up":[56,60],"cp":[25],"n":"CARLOS NUNES FERNANDES"},{"c":59,"b":[[1346.0,436.8,1365.0,454.2]],"u":0,"g":4,"p":[],"s":[36],"k":[86],"up":[],"cp":[25],"n":"ANA"},{"c":25,"b":[[1448.2,325.8,1501.8,343.2]],"u":0,"g":3,"p":[],"s":[34],"k":[41,53],"up":[],"cp":[9],"n":"CONCEIÇÃO"},{"c":61,"b":[[1448.4,427.8,1474.6,445.2]],"u":0,"g":4,"p":[],"s":[40,43],"k":[],"up":[],"cp":[24,27],"n":"MENA"},{"c":63,"b":[[1502.5,427.8,1513.5,445.2]],"u":1,"g":4,"p":[],"s":[39],"k":[],"up":[],"cp":[24],"n":"(?)"},{"c":60,"b":[[1415.3,437.3,1444.7,454.7]],"u":0,"g":4,"p":[34,38],"s":[42],"k":[87,99],"up":[57,61],"cp":[26],"n":"PAULO"},{"c":62,"b":[[1472.4,437.3,1495.7,454.7]],"u":0,"g":4,"p":[],"s":[41],"k":[87,99],"up":[],"cp":[26],"n":"LENA"},{"c":74,"b":[[1503.0,462.8,1524.8,480.2]],"u":0,"g":4,"p":[],"s":[39],"k":[],"up":[],"cp":[27],"n":"TINO"},{"c":10,"b":[[2616.0,221.3,2671.0,247.7]],"u":0,"g":2,"p":[],"s":[60],"k":[56,62,63,66,69,72],"up":[],"cp":[4],"n":"JOSÉ DOMINGUES"},{"c":9,"b":[[1553.5,225.8,1564.5,243.2]],"u":1,"g":2,"p":[],"s":[27],"k":[29,47,54],"up":[],"cp":[3],"n":"(?)"},{"c":26,"b":[[1576.1,326.3,1662.9,343.7]],"u":0,"g":3,"p":[17,28],"s":[],"k":[],"up":[37,40,55],"cp":[],"n":"MARIA DE LOURDES"},{"c":27,"b":[[1721.0,326.8,1759.0,344.2]],"u":0,"g":3,"p":[27,45],"s":[48],"k":[],"up":[49,54,65],"cp":[10],"n":"MANUEL"},{"c":28,"b":[[1786.4,326.8,1825.6,344.2]],"u":0,"g":3,"p":[17,28],"s":[47],"k":[],"up":[37,40,53],"cp":[10],"n":"CELESTE"},{"c":29,"b":[[1884.4,327.3,1949.6,344.7]],"u":0,"g":3,"p":[17,28],"s":[],"k":[],"up":[37,40,52],"cp":[],"n":"MARIA DO CÉU"},{"c":31,"b":[[2104.1,322.3,2153.9,348.7]],"u":0,"g":3,"p":[17,28],"s":[54],"k":[59],"up":[37,40,47],"cp":[11],"n":"JOSÉ DOMINGOS"},{"c":30,"b":[[2008.2,327.3,2045.8,344.7]],"u":0,"g":3,"p":[17,28],"s":[],"k":[],"up":[37,40,51],"cp":[],"n":"AFONSO"},{"c":65,"b":[[2010.1,426.8,2045.9,444.2]],"u":0,"g":4,"p":[],"s":[59],"k":[88,89],"up":[],"cp":[19],"n":"CARLOS"},{"c":64,"b":[[1587.1,437.3,1609.9,454.7]],"u":0,"g":4,"p":[34,38],"s":[],"k":[],"up":[59,61,63,66],"cp":[],"n":"JOSÉ"},{"c":32,"b":[[2181.4,326.8,2230.6,344.2]],"u":0,"g":3,"p":[27,45],"s":[50],"k":[59],"up":[48,54,65],"cp":[11],"n":"CELESTINA"},{"c":33,"b":[[2283.1,326.8,2330.9,344.2]],"u":0,"g":3,"p":[17,28],"s":[56],"k":[],"up":[37,40,78],"cp":[12],"n":"CARMINDA"},{"c":34,"b":[[2358.4,326.8,2399.6,344.2]],"u":0,"g":3,"p":[44,60],"s":[55],"k":[],"up":[79,129,130],"cp":[12],"n":"ANTÓNIO"},{"c":67,"b":[[2291.3,423.3,2322.7,449.7]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[97,117],"cp":[],"n":"JOSÉ NUNES"},{"c":68,"b":[[2388.5,427.3,2399.5,444.7]],"u":1,"g":4,"p":[],"s":[64],"k":[],"up":[],"cp":[20],"n":"(?)"},{"c":66,"b":[[2073.3,426.8,2103.8,444.2]],"u":0,"g":4,"p":[50,54],"s":[52],"k":[88,89],"up":[58,62,64],"cp":[19],"n":"ISABEL"},{"c":11,"b":[[2698.5,225.8,2709.5,243.2]],"u":1,"g":2,"p":[],"s":[44],"k":[56,62,63,66,69,72],"up":[],"cp":[4],"n":"(?)"},{"c":36,"b":[[2591.1,326.8,2677.9,344.2]],"u":0,"g":3,"p":[],"s":[63],"k":[65],"up":[],"cp":[13],"n":"MARIA DE LOURDES"},{"c":35,"b":[[2452.4,327.3,2551.6,344.7]],"u":0,"g":3,"p":[44,60],"s":[],"k":[],"up":[128,129,130],"cp":[],"n":"MARIA DA CONCEIÇÃO"},{"c":37,"b":[[2705.1,326.8,2745.9,344.2]],"u":0,"g":3,"p":[44,60],"s":[61],"k":[65],"up":[124,129,130],"cp":[13],"n":"ALFREDO"},{"c":69,"b":[[2427.1,427.3,2474.9,444.7]],"u":0,"g":4,"p":[],"s":[58],"k":[],"up":[105,117],"cp":[20],"n":"CARMINDA"},{"c":70,"b":[[2734.2,427.3,2757.8,444.7]],"u":0,"g":4,"p":[61,63],"s":[],"k":[],"up":[80,94,95],"cp":[],"n":"ZECA"},{"c":38,"b":[[2842.4,327.3,2876.6,344.7]],"u":0,"g":3,"p":[44,60],"s":[],"k":[],"up":[127,129,130],"cp":[],"n":"LUCILIA"},{"c":39,"b":[[2954.4,322.3,2993.6,348.7]],"u":0,"g":3,"p":[],"s":[69],"k":[70,71],"up":[],"cp":[14],"n":"MICLINA ALMEIDA"},{"c":41,"b":[[3132.4,322.3,3192.6,348.7]],"u":0,"g":3,"p":[],"s":[72],"k":[73,74,75,100,101,102,103,113],"up":[],"cp":[15],"n":"MARIA DA ANUNCIAÇÃO"},{"c":40,"b":[[3021.4,326.8,3062.6,344.2]],"u":0,"g":3,"p":[44,60],"s":[67],"k":[70,71],"up":[125,129,130],"cp":[14],"n":"JOAQUIM"},{"c":71,"b":[[2995.2,427.3,3018.8,444.7]],"u":0,"g":4,"p":[67,69],"s":[],"k":[],"up":[93],"cp":[],"n":"ZECA"},{"c":72,"b":[[3072.1,427.3,3113.9,444.7]],"u":0,"g":4,"p":[67,69],"s":[],"k":[],"up":[81,93,96],"cp":[],"n":"TONINHO"},{"c":42,"b":[[3220.1,326.8,3242.9,344.2]],"u":0,"g":3,"p":[44,60],"s":[68],"k":[73,74,75,100,101,102,103,113],"up":[126,129,130],"cp":[15],"n":"JOSÉ"},{"c":73,"b":[[3216.5,427.3,3227.5,444.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,83,91,92],"cp":[],"n":"ZÉ"},{"c":75,"b":[[3216.1,455.3,3279.9,472.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,84,91,92],"cp":[],"n":"MARIA AMÉLIA"},{"c":76,"b":[[3216.4,483.3,3315.6,500.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,90,91,92],"cp":[],"n":"MARIA DA CONCEIÇÃO"},{"c":94,"b":[[46.3,524.3,73.7,541.7]],"u":0,"g":5,"p":[3,4],"s":[],"k":[],"up":[33],"cp":[],"n":"TIAGO"},{"c":95,"b":[[141.1,524.3,173.9,541.7]],"u":0,"g":5,"p":[5,12],"s":[],"k":[],"up":[34],"cp":[],"n":"RAFAEL"},{"c":90,"b":[[446.2,519.3,486.8,545.7]],"u":0,"g":5,"p":[16,20],"s":[],"k":[],"up":[32],"cp":[],"n":"BEATRIZ MARTINS"},{"c":96,"b":[[540.3,524.3,567.7,541.7]],"u":0,"g":5,"p":[21,23],"s":[],"k":[],"up":[5,30,43],"cp":[],"n":"TIAGO"},{"c":97,"b":[[595.5,524.3,622.5,541.7]],"u":0,"g":5,"p":[21,23],"s":[],"k":[],"up":[7,30,43],"cp":[],"n":"NUNO"},{"c":98,"b":[[817.0,524.3,869.0,541.7]],"u":0,"g":5,"p":[21,23],"s":[],"k":[],"up":[8,30,43],"cp":[],"n":"FRANCISCO"},{"c":91,"b":[[904.1,519.3,948.9,545.7]],"u":0,"g":5,"p":[26,31],"s":[],"k":[],"up":[4,23,38],"cp":[],"n":"DÁRIO TRINDADE"},{"c":92,"b":[[972.1,519.3,1016.9,545.7]],"u":0,"g":5,"p":[26,31],"s":[],"k":[],"up":[6,23,38],"cp":[],"n":"SARA TRINDADE"},{"c":93,"b":[[1089.4,519.3,1131.6,545.7]],"u":0,"g":5,"p":[32,33],"s":[],"k":[],"up":[31],"cp":[],"n":"NATACHA MARTINS"},{"c":102,"b":[[1950.2,524.3,1975.8,541.7]],"u":0,"g":5,"p":[],"s":[88],"k":[104],"up":[],"cp":[29],"n":"FÁBIO"},{"c":99,"b":[[1318.4,543.3,1344.6,560.7]],"u":0,"g":5,"p":[36,37],"s":[],"k":[],"up":[67],"cp":[],"n":"FILIPA"},{"c":100,"b":[[1411.2,543.3,1434.8,560.7]],"u":0,"g":5,"p":[41,42],"s":[],"k":[],"up":[68,70,73],"cp":[],"n":"DINIZ"},{"c":103,"b":[[2003.5,524.3,2040.6,541.7]],"u":0,"g":5,"p":[52,59],"s":[85],"k":[104],"up":[74,76,77],"cp":[29],"n":"SUSANA"},{"c":104,"b":[[2081.4,524.3,2100.6,541.7]],"u":0,"g":5,"p":[52,59],"s":[90],"k":[105],"up":[75,76,77],"cp":[30],"n":"RITA"},{"c":105,"b":[[2128.1,524.3,2160.9,541.7]],"u":0,"g":5,"p":[],"s":[89],"k":[105],"up":[],"cp":[30],"n":"SÉRGIO"},{"c":78,"b":[[2251.4,524.3,2290.6,541.7]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[98,118],"cp":[],"n":"PATRÍCIA"},{"c":79,"b":[[2327.4,523.3,2357.6,540.7]],"u":0,"g":4,"p":[],"s":[],"k":[],"up":[101,118],"cp":[],"n":"PEDRO"},{"c":80,"b":[[2394.1,523.3,2433.9,540.7]],"u":0,"g":4,"p":[],"s":[94],"k":[106],"up":[104,118],"cp":[28],"n":"RICARDO"},{"c":81,"b":[[2461.5,523.3,2472.5,540.7]],"u":1,"g":4,"p":[],"s":[93],"k":[106],"up":[],"cp":[28],"n":"(?)"},{"c":82,"b":[[2542.4,523.8,2568.6,541.2]],"u":0,"g":4,"p":[],"s":[96],"k":[109,110],"up":[100,123],"cp":[31],"n":"CÁTIA"},{"c":83,"b":[[2596.5,523.8,2625.5,541.2]],"u":0,"g":4,"p":[],"s":[95],"k":[109,110],"up":[],"cp":[31],"n":"MÁRIO"},{"c":84,"b":[[2675.3,523.8,2716.7,541.2]],"u":0,"g":4,"p":[],"s":[98],"k":[111,112],"up":[99,121,122],"cp":[32],"n":"VANESSA"},{"c":85,"b":[[2744.5,523.8,2755.5,541.2]],"u":1,"g":4,"p":[],"s":[97],"k":[111,112],"up":[],"cp":[32],"n":"(?)"},{"c":101,"b":[[1472.5,543.3,1508.5,560.7]],"u":0,"g":5,"p":[41,42],"s":[],"k":[],"up":[69,70,73],"cp":[],"n":"MARTIM"},{"c":77,"b":[[3216.4,511.3,3257.6,528.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,85,91,92],"cp":[],"n":"ANTÓNIO"},{"c":86,"b":[[3216.1,539.3,3249.9,556.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,86,91,92],"cp":[],"n":"SILVINA"},{"c":87,"b":[[3216.1,567.3,3243.9,584.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,87,91,92],"cp":[],"n":"ISILDA"},{"c":88,"b":[[3216.2,595.3,3257.8,612.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,88,91,92],"cp":[],"n":"LOURDES"},{"c":112,"b":[[1970.5,621.3,2007.5,638.7]],"u":0,"g":6,"p":[85,88],"s":[],"k":[],"up":[71],"cp":[],"n":"GABRIEL"},{"c":113,"b":[[2096.2,621.3,2132.8,638.7]],"u":0,"g":6,"p":[89,90],"s":[],"k":[],"up":[72],"cp":[],"n":"LEONOR"},{"c":106,"b":[[2295.0,624.3,2339.0,641.7]],"u":0,"g":5,"p":[93,94],"s":[107],"k":[108],"up":[113,114,115],"cp":[33],"n":"CATARINA"},{"c":107,"b":[[2366.5,624.3,2377.5,641.7]],"u":1,"g":5,"p":[],"s":[106],"k":[108],"up":[],"cp":[33],"n":"(?)"},{"c":114,"b":[[2328.5,724.3,2377.5,741.7]],"u":0,"g":6,"p":[106,107],"s":[],"k":[],"up":[116],"cp":[],"n":"CARMINHO"},{"c":108,"b":[[2466.4,624.3,2517.6,641.7]],"u":0,"g":5,"p":[95,96],"s":[],"k":[],"up":[102,111,120],"cp":[],"n":"FRANCISCA"},{"c":109,"b":[[2557.2,624.3,2606.8,641.7]],"u":0,"g":5,"p":[95,96],"s":[],"k":[],"up":[103,111],"cp":[],"n":"LOURENÇO"},{"c":110,"b":[[2647.3,624.3,2670.7,641.7]],"u":0,"g":5,"p":[97,98],"s":[],"k":[],"up":[109,110,119],"cp":[],"n":"LARA"},{"c":111,"b":[[2716.4,624.3,2745.6,641.7]],"u":0,"g":5,"p":[97,98],"s":[],"k":[],"up":[109],"cp":[],"n":"DIOGO"},{"c":89,"b":[[3216.2,623.3,3261.8,640.7]],"u":0,"g":4,"p":[68,72],"s":[],"k":[],"up":[82,89,91,92],"cp":[],"n":"FILOMENA"}],"grp":[{"m":[4,12,13,14],"s":[11,12,13,14,29,42]},{"m":[15,19,22],"s":[18,21,22,41]},{"m":[57,64],"s":[97,105,106,117]},{"m":[91,92,93],"s":[98,101,104,108,118]},{"m":[97],"s":[99,112,121,122]},{"m":[95],"s":[100,123]}]}];
+const C=[{"n":"00","t":"Introdução","cover":"cover-00.jpg","secs":[{"c":"00.1","t":"Vista aérea: o lugar e a sua geografia","items":[["a07.jpg",1.728],["a08.jpg",1.728],["a09.jpg",1.728],["a010.jpg",1.728],["a011.jpg",1.728],["a12.jpg",1.255]],"mod":"zoom","overlay":"<p>O estudo das pequenas aldeias portuguesas tem vindo a ganhar uma importância no âmbito das ciências sociais e humanas, não apenas pelo seu valor enquanto espaços de memória e identidade, mas também pela sua relevância no debate sobre desenvolvimento regional e sustentabilidade. Entre estas aldeias encontra-se Pescanseco Fundeiro (A terra), uma localidade que, apesar da sua pequena dimensão, contém uma riqueza patrimonial, cultural e social digna de uma análise mais aprofundada. A escolha deste tema resulta também de uma motivação pessoal: a minha avó é natural desta aldeia e algumas das minhas melhores memórias estão ligadas a este lugar. Foi neste espaço, pequeno em tamanho mas imenso em significado, que aprendi a valorizar as tradições, paisagens e vivências que hoje me inspiram a dar voz a uma comunidade em que tantas vezes é esquecida.</p><aside class=\"mg\">Ao longo deste trabalho, a expressão “a minha terra” é usada não apenas no sentido geográfico, mas também afetivo. “A terra” refere‑se a Pescanseco Fundeiro enquanto lugar de pertença, de raiz familiar e de construção de memória, articulando a dimensão subjetiva da autora com a análise territorial e social desenvolvida nesta investigação.</aside><p>Situada numa região marcada pela forte ligação à agricultura, à floresta e aos modos de vida tradicionais, Pescanseco Fundeiro representa um exemplo vivo das transformações que o mundo rural português tem vindo a enfrentar ao longo das últimas décadas. O despovoamento, o envelhecimento da população, a perda de serviços essenciais e a necessidade de encontrar novas dinâmicas económicas são apenas alguns dos desafios que se fazem sentir no território. Ao mesmo tempo, a aldeia mantém traços de autenticidade que constituem um recurso precioso para a preservação da memória coletiva e para o reforço da identidade local.</p><p>Mais do que descrever o território ou a sua evolução histórica, este projeto procura experimentar novas formas de representar a aldeia através do design gráfico e da visualização de dados. A cartografia psicogeográfica permite capturar dimensões emocionais e subjetivas dos habitantes em relação ao espaço, enquanto o design de informação oferece meios rigorosos e criativos para organizar e comunicar esses dados. Através desta abordagem híbrida, pretende-se dar corpo a mapas e narrativas visuais que traduzam tanto a materialidade do território como as experiências e memórias individuais que nele habitam.</p><aside class=\"mg\"><b>Pescanseco.</b> Parece ser uma alcunha (pesca em seco) feita topónimo na Idade Média. Os compostos Pescanseco Cimeiro e Pescanseco Fundeiro indicam a sua posição relativa um ao outro. <b>Pescanseco Fundeiro</b> é uma aldeia situada no concelho de Pampilhosa da Serra, distrito de Coimbra. Foi uma das localidades atingidas pelos incêndios recentes que atingiram Portugal. A 11 de junho de 2019, algumas casas reconstruídas foram devolvidas aos seus proprietários.</aside><p>O projeto ambiciona, assim, construir um arquivo visual-narrativo de Pescanseco Fundeiro, resultante da recolha de dados qualitativos e quantitativos — desde questionários e entrevistas até observações no terreno. Esses dados serão trabalhados graficamente em mapas, representações visuais que privilegiam a clareza e a legibilidade, mas também a dimensão afetiva e cultural do lugar. Este será o resultado destas representações, permitindo não apenas registar a aldeia e as suas histórias, mas também oferecer uma nova forma de olhar para territórios semelhantes.</p><p>Deste modo, esta investigação pretende demonstrar como o design pode ir além da função comunicativa tradicional, tornando-se uma ferramenta de interpretação e valorização da realidade. Pescanseco Fundeiro torna-se, aqui, um caso de estudo, evidenciando como a interseção entre design, psicogeografia e visualização de dados pode, também, contribuir para reforçar identidades locais, preservar memórias coletivas e propor novas leituras do espaço rural português.</p>"},{"c":"00.2","t":"Ao longo dos anos","items":[["imp/0000_a_ceu.jpg",0.75],["imp/0000_b_placa.jpg",1.333],["imp/0000_c_nicho.jpg",1.333],["imp/2016_02.jpg",1.5],["imp/2016_03.jpg",1.5],["imp/2019_02.jpg",0.744],["imp/2019_03.jpg",0.75],["imp/2020_02.jpg",0.75],["imp/2020_05.jpg",0.75],["imp/2021_01.jpg",1.0],["imp/2022_03.jpg",1.0],["imp/2023_02.jpg",0.75],["imp/2024_02.jpg",0.75]],"mod":"track"},{"c":"00.3","t":"Superfícies da paisagem construída","items":[["voo/DJI_0078.jpg",1.333],["voo/DJI_0079.jpg",1.333],["voo/DJI_0080.jpg",1.333],["voo/DJI_0081.jpg",1.333],["voo/DJI_0082.jpg",1.333],["voo/DJI_0083.jpg",1.333],["voo/DJI_0084.jpg",1.333],["voo/DJI_0085.jpg",1.333],["voo/DJI_0086.jpg",1.333],["voo/DJI_0087.jpg",1.333],["voo/DJI_0088.jpg",1.333],["voo/DJI_0090.jpg",1.333],["voo/DJI_0091.jpg",1.333],["voo/DJI_0092.jpg",1.333],["voo/DJI_0094.jpg",1.333],["voo/DJI_0095.jpg",1.333],["voo/DJI_0096.jpg",1.333],["voo/DJI_0097.jpg",1.333],["voo/DJI_0099.jpg",1.333],["voo/DJI_0101.jpg",1.333],["voo/DJI_0102.jpg",1.333],["voo/DJI_0104.jpg",1.333],["voo/DJI_0105.jpg",1.333],["voo/DJI_0107.jpg",1.333],["voo/DJI_0108.jpg",1.333],["voo/DJI_0109.jpg",1.333],["voo/DJI_0110.jpg",1.333],["voo/DJI_0111.jpg",1.333],["voo/DJI_0112.jpg",1.333],["voo/DJI_0113.jpg",1.333],["voo/DJI_0114.jpg",1.333],["voo/DJI_0115.jpg",1.333],["voo/DJI_0116.jpg",1.333],["voo/DJI_0117.jpg",1.333],["voo/DJI_0118.jpg",1.333],["voo/DJI_0120.jpg",1.333]],"mod":"scatter","overlay":"<p>Pescanseco Fundeiro é uma pequena aldeia do interior de Portugal, situada no concelho da Pampilhosa da Serra. Isolada pelas montanhas e pelo tempo, constitui um lugar onde a paisagem natural e o ritmo das estações se cruzam de forma íntima com a vida quotidiana dos habitantes.</p><p>Pescanseco Fundeiro é mais do que um espaço físico: é um território de afetos, de histórias, famílias e de vivências que são partilhadas. É aqui que a geografia se transforma em narrativa e onde cada caminho, cada casa e cada prática comunitária se considera como parte de uma identidade comum.</p><p>O significado deste projeto nasce dessa ligação pessoal e da vontade de preservar, interpretar e reimaginar a aldeia através do design de informação e da cartografia psicogeográfica. Ao mapear as memórias, os percursos e as relações humanas de Pescanseco Fundeiro, procuro construir não apenas uma representação gráfica do lugar, mas também uma narrativa visual que valorize a sua riqueza cultural e simbólica.</p><p>Este trabalho é, assim, um exercício de escuta e de tradução: escutar as histórias da comunidade e traduzi‑las em mapas, diagramas e visualizações que revelem tanto a materialidade do espaço como as camadas invisíveis de significado que nele habitam.</p>"}]},{"n":"01","t":"Memória","cover":"cover-01.jpg","secs":[{"c":"01.1","t":"Fragmentos do tempo","items":[["p022_0722_0128.jpg",1.289],["p022_1210_0799.jpg",1.279],["p022_1518_0799.jpg",1.279],["p023_0414_0799.jpg",1.279],["p023_0723_0796.jpg",1.258],["p023_1518_0796.jpg",1.258],["p023_1826_0796.jpg",1.263],["p024_0723_0128.jpg",1.285],["p024_1209_0798.jpg",1.273],["p024_1826_0798.jpg",1.278],["p025_0722_0128.jpg",1.284],["p025_1518_0128.jpg",1.284],["p026_1826_0128.jpg",1.323]]},{"c":"01.2","t":"Paisagem em cinzas","items":[["p029_0106_0512.jpg",1.284],["p029_0106_0642.jpg",1.284],["p029_0106_1182.jpg",1.188],["p029_0260_0121.jpg",1.197],["p029_0260_0256.jpg",1.273],["p029_0260_0377.jpg",1.197],["p029_0260_0640.jpg",1.099],["p029_0260_0769.jpg",1.273],["p029_0414_0384.jpg",1.273],["p029_0414_0642.jpg",1.284],["p029_0414_0890.jpg",1.207],["p029_0568_0384.jpg",1.273],["p029_0568_1182.jpg",1.188],["p029_0722_0128.jpg",1.275],["p029_0722_0384.jpg",1.264],["p029_0722_0890.jpg",1.198],["p029_0876_0128.jpg",1.284],["p029_0876_0890.jpg",1.198],["p029_0877_1182.jpg",1.188]]},{"c":"01.3","t":"Vozes da memória","items":[["p030_0106_0128.jpg",0.756],["p032_0106_0128.jpg",0.946]]}]},{"n":"02","t":"A Terra","cover":"cover-02.jpg","secs":[{"c":"02.1","t":"O desenho do lugar","items":[["mapa-usos.jpg",1.468],["planta-manchas.jpg",0.684],["planta-linhas.jpg",0.684]]},{"c":"02.2","t":"A terra nomeada","items":[]},{"c":"02.3","t":"Habitar o desenho","items":[]},{"c":"02.4","t":"Mapa das relações humanas","items":[]}]},{"n":"03","t":"Pessoas","cover":"cover-03.jpg","secs":[{"c":"03.1","t":"Rostos da terra","items":[]},{"c":"03.2","t":"Histórias e vozes","items":[]},{"c":"03.3","t":"Entrevistas e testemunhos","items":[]},{"c":"03.4","t":"Código das pessoas","items":[]},{"c":"03.4.1","t":"Ligações e redes de convivência","items":[],"mod":"familias"},{"c":"03.4.2","t":"Presença e frequência","items":[]},{"c":"03.5","t":"Cartografia humana do território","items":[]}]},{"n":"04","t":"Elementos","cover":null,"secs":[{"c":"04.1","t":"O céu que envolve","items":[]},{"c":"04.2","t":"O chão e as suas texturas","items":[["p053_0106_0128.jpg",1.0],["p053_0290_0128.jpg",1.0],["p053_0474_0128.jpg",1.0],["p053_0658_0128.jpg",1.0],["p053_0841_0128.jpg",1.006],["p054_0107_0235.jpg",2.597],["p054_0107_0590.jpg",2.597],["p054_0107_0948.jpg",2.606],["p054_1209_0590.jpg",2.597],["p054_1210_0236.jpg",2.589],["p054_1210_0948.jpg",2.606]]},{"c":"04.2.1","t":"Transições e fronteiras","items":[]},{"c":"04.3","t":"Arquitetura do quotidiano","items":[]},{"c":"04.3.1","t":"Nomes que desenham caminhos","items":[]},{"c":"04.3.2","t":"O corpo da subida","items":[]},{"c":"04.3.3","t":"As mãos do lugar","items":[]},{"c":"04.4","t":"Símbolos e identidades locais","items":[]},{"c":"04.4.1","t":"Santos de parede e de caminho","items":[]},{"c":"04.5","t":"Infraestruturas e objetos funcionais","items":[]},{"c":"04.5.1","t":"Caixas de eletricidade e água","items":[["p055_0073_0085.jpg",0.971],["p055_1691_0329.jpg",1.281],["p055_1691_0714.jpg",1.284],["p056_0106_0392.jpg",0.993],["p056_0106_0701.jpg",1.0],["p056_0106_1005.jpg",1.0],["p056_0414_0392.jpg",0.997],["p056_0414_0701.jpg",0.997],["p056_0414_1004.jpg",0.997],["p056_0722_0393.jpg",1.0],["p056_0722_0701.jpg",0.997],["p056_0722_1005.jpg",1.0],["p056_1210_0128.jpg",0.751],["p056_1518_0128.jpg",0.754],["p056_1826_0128.jpg",0.754],["p057_0106_0128.jpg",0.771],["p057_0106_0718.jpg",0.769],["p057_0568_0128.jpg",0.768],["p057_0568_0719.jpg",0.772],["p057_1209_0128.jpg",0.776]]},{"c":"04.5.2","t":"Caixas de correio","items":[["p058_0072_0328.jpg",0.947],["p058_0073_0842.jpg",0.947],["p058_0549_0329.jpg",0.947],["p058_0549_0842.jpg",0.947],["p058_1214_0329.jpg",0.945],["p058_1215_0842.jpg",0.945],["p058_1691_0329.jpg",0.945],["p058_1691_0842.jpg",0.945],["p059_0072_0235.jpg",0.424],["p059_0548_0841.jpg",0.949],["p059_0595_0246.jpg",0.751],["p059_1074_0194.jpg",0.539],["p059_1691_0329.jpg",0.945],["p059_1691_0842.jpg",0.945],["p060_0073_0329.jpg",0.947],["p060_0073_0842.jpg",0.947],["p060_0549_0842.jpg",0.947],["p061_0073_0329.jpg",0.62],["p061_0073_0852.jpg",0.634],["p061_0390_0327.jpg",0.622],["p061_0391_0842.jpg",0.621],["p061_0708_0842.jpg",0.621],["p062_0055_0176.jpg",0.501],["p062_0073_0842.jpg",0.621],["p062_0390_0842.jpg",0.623],["p062_0391_0329.jpg",0.621],["p062_0708_0328.jpg",0.62],["p062_0708_0842.jpg",0.621],["p062_1215_0329.jpg",0.621],["p062_1531_0329.jpg",0.623],["p062_1849_0842.jpg",0.621],["p063_0073_0102.jpg",0.75]]},{"c":"04.5.3","t":"Números, vozes","items":[["p065_0073_0328.jpg",1.918],["p065_0073_0842.jpg",1.923],["p065_1215_0329.jpg",1.918],["p065_1215_0842.jpg",1.918],["p066_0073_0329.jpg",1.923],["p066_0073_0842.jpg",1.887],["p066_1215_0842.jpg",1.918]]},{"c":"04.5.4","t":"Entradas, limiares e fechos","items":[["p068_0073_0329.jpg",1.287],["p068_0073_0714.jpg",1.287],["p068_0549_0329.jpg",1.283],["p068_0549_0714.jpg",1.287],["p068_1215_0329.jpg",1.284],["p068_1215_0714.jpg",1.284],["p068_1691_0329.jpg",1.281],["p068_1691_0714.jpg",1.284],["p069_0073_0329.jpg",1.287],["p069_0073_0714.jpg",1.253],["p069_0549_0329.jpg",1.283],["p069_0549_0714.jpg",1.287],["p069_1215_0329.jpg",1.284],["p069_1215_0714.jpg",1.284],["p069_1691_0329.jpg",1.281],["p069_1691_0714.jpg",1.284],["p070_0073_0329.jpg",1.279],["p070_0073_0714.jpg",1.287],["p070_0549_0327.jpg",1.272],["p070_0549_0714.jpg",1.287],["p070_1214_0714.jpg",1.287],["p070_1215_0330.jpg",1.284],["p070_1691_0329.jpg",1.281],["p070_1691_0714.jpg",1.284],["p071_0073_0329.jpg",0.461],["p071_0549_0329.jpg",0.461],["p071_1214_0329.jpg",0.461],["p071_1690_0329.jpg",0.461],["p072_0073_0329.jpg",0.461],["p072_0550_0328.jpg",0.46],["p072_1691_0329.jpg",0.46],["p073_0055_0303.jpg",0.725],["p073_1209_0105.jpg",0.745],["p074_0308_0183.jpg",0.738],["p075_1689_0328.jpg",0.479],["p078_1065_0254.jpg",0.75],["p079_0072_0101.jpg",0.766],["p079_1214_0102.jpg",0.764],["p079_1689_0101.jpg",0.763],["p080_0073_1099.jpg",0.429],["p080_0179_1099.jpg",3.604],["p085_0073_0101.jpg",0.749],["p085_0548_0103.jpg",0.751],["p085_1214_0329.jpg",1.0],["p085_1215_0677.jpg",0.997],["p085_1215_1025.jpg",0.997],["p085_1531_0329.jpg",1.0],["p085_1532_0677.jpg",1.0],["p085_1532_1025.jpg",1.0],["p085_1849_0329.jpg",0.997],["p085_1849_0677.jpg",1.0],["p085_1849_1024.jpg",0.997],["p086_0073_0329.jpg",1.0],["p086_0073_0677.jpg",1.0],["p086_0073_1025.jpg",1.0],["p086_0391_0329.jpg",1.0],["p086_0391_0677.jpg",0.997],["p086_0391_1025.jpg",1.0],["p086_0708_0330.jpg",1.003],["p086_0708_0677.jpg",1.0],["p086_0708_1025.jpg",1.0],["p086_1215_0329.jpg",1.0],["p086_1215_0677.jpg",1.0],["p086_1215_1025.jpg",1.0],["p086_1532_0330.jpg",1.003],["p086_1532_0677.jpg",1.0],["p086_1532_1025.jpg",1.0],["p086_1849_0330.jpg",1.003],["p086_1849_1025.jpg",1.003],["p086_1850_0677.jpg",0.997],["p087_0073_0330.jpg",1.003],["p087_0073_0677.jpg",1.0],["p087_0073_1025.jpg",1.0],["p087_0391_0329.jpg",1.0],["p087_0391_0678.jpg",1.0],["p087_0391_1025.jpg",1.0],["p087_0708_0330.jpg",1.003],["p087_0708_0677.jpg",1.0],["p087_0708_1024.jpg",0.997],["p087_1214_1024.jpg",1.0],["p087_1531_1025.jpg",1.003],["p087_1532_0687.jpg",1.0],["p087_1849_0687.jpg",1.0],["p087_1849_1025.jpg",1.0],["p088_0073_0329.jpg",1.0],["p088_0073_0677.jpg",0.993],["p088_0073_1027.jpg",1.0],["p088_0390_1026.jpg",1.0],["p088_0391_0329.jpg",1.0],["p088_0391_0677.jpg",0.993],["p088_0708_0329.jpg",1.0],["p088_0708_0678.jpg",1.0],["p088_0708_1027.jpg",1.0],["p088_1849_1027.jpg",1.0],["p089_0073_0329.jpg",0.304],["p089_0390_0328.jpg",0.305],["p089_0708_0329.jpg",0.304],["p089_1215_0329.jpg",0.304],["p089_1532_0329.jpg",0.304],["p089_1849_0330.jpg",0.304],["p090_0073_0329.jpg",0.304],["p090_0390_0328.jpg",0.305],["p090_0708_0328.jpg",0.304],["p090_1214_0329.jpg",0.304],["p090_1531_0328.jpg",0.304],["p090_1849_0328.jpg",0.302],["p091_0072_0101.jpg",0.762],["p091_1215_0329.jpg",0.304],["p091_1531_0328.jpg",0.305],["p091_1849_0328.jpg",0.305],["p092_0073_0328.jpg",0.302],["p092_0391_0329.jpg",0.304],["p092_0707_0328.jpg",0.304],["p092_1214_0329.jpg",0.304],["p092_1532_0328.jpg",0.302],["p092_1849_0328.jpg",0.304],["p093_0073_0329.jpg",0.304],["p093_0391_0329.jpg",0.304],["p093_0708_0329.jpg",0.304],["p095_0073_0332.jpg",1.0],["p095_0073_0679.jpg",1.0],["p095_0073_1027.jpg",1.0],["p095_0390_1026.jpg",1.0],["p095_0391_0332.jpg",1.0],["p095_0391_0679.jpg",1.0],["p095_0707_0679.jpg",1.0],["p095_0708_0332.jpg",1.0],["p095_0708_1027.jpg",1.0],["p095_1214_0679.jpg",1.007],["p095_1215_0332.jpg",1.0],["p095_1215_1027.jpg",1.0],["p095_1532_0332.jpg",1.0],["p095_1532_0679.jpg",1.0],["p095_1532_1027.jpg",1.0],["p095_1849_0332.jpg",1.0],["p095_1849_0679.jpg",1.0],["p095_1849_1027.jpg",1.0],["p096_0073_0332.jpg",1.003],["p096_0073_0679.jpg",1.0],["p096_0073_1027.jpg",1.003],["p096_0390_0679.jpg",1.003],["p096_0391_0332.jpg",1.0],["p096_0391_1027.jpg",0.997],["p096_0707_0679.jpg",1.003],["p096_0708_0331.jpg",0.997],["p096_0708_1026.jpg",0.993],["p096_1215_0332.jpg",1.0],["p096_1215_0679.jpg",1.0],["p096_1215_1027.jpg",1.0],["p096_1532_0332.jpg",1.0],["p096_1532_0679.jpg",1.0],["p096_1532_1027.jpg",1.0],["p096_1849_0331.jpg",1.0],["p096_1849_0679.jpg",1.0],["p096_1849_1026.jpg",0.997],["p097_0073_0331.jpg",0.997],["p097_0073_0679.jpg",1.0],["p097_0073_1027.jpg",1.0],["p097_0390_1027.jpg",1.003],["p097_0391_0332.jpg",1.003],["p097_0391_0679.jpg",1.0],["p097_0708_0332.jpg",1.0],["p097_0708_0679.jpg",1.0],["p097_0708_1027.jpg",1.0],["p097_1214_0332.jpg",1.003],["p097_1215_0679.jpg",1.0],["p097_1215_1027.jpg",1.0],["p097_1531_0679.jpg",1.0],["p097_1532_0332.jpg",1.0],["p097_1532_1027.jpg",1.0],["p097_1849_0331.jpg",0.997],["p097_1849_0679.jpg",0.997],["p097_1849_1027.jpg",1.0],["p098_0073_0332.jpg",1.003],["p098_0073_0679.jpg",1.0],["p098_0073_1027.jpg",1.0],["p098_0390_0332.jpg",1.003],["p098_0391_0679.jpg",1.0],["p098_0391_1027.jpg",1.0],["p098_0708_0332.jpg",1.0],["p098_0708_0679.jpg",1.0],["p098_0708_1027.jpg",1.0],["p098_1214_0332.jpg",1.003],["p098_1214_1027.jpg",1.003],["p098_1215_0679.jpg",1.0],["p098_1532_0332.jpg",1.0],["p098_1532_0679.jpg",1.0],["p098_1532_1027.jpg",1.0],["p098_1849_0329.jpg",1.0],["p098_1849_0679.jpg",1.0],["p098_1849_1027.jpg",1.0],["p099_0073_0332.jpg",1.0],["p099_0073_0679.jpg",1.0],["p099_0073_1027.jpg",1.0],["p099_0390_0679.jpg",1.003],["p099_0390_1027.jpg",1.003],["p099_0708_0330.jpg",1.003],["p099_0708_0679.jpg",1.0],["p099_0708_1027.jpg",1.0],["p100_0073_0328.jpg",0.62],["p100_0073_0842.jpg",0.621],["p100_0391_0329.jpg",0.621],["p100_0391_0841.jpg",0.62],["p100_0707_0841.jpg",0.62],["p100_0708_0329.jpg",0.62],["p100_1214_0842.jpg",0.622],["p100_1215_0329.jpg",0.621],["p100_1531_0328.jpg",0.621],["p100_1531_0842.jpg",0.622],["p100_1849_0328.jpg",0.618],["p100_1849_0842.jpg",0.621],["p101_0073_0329.jpg",0.62],["p101_0073_0842.jpg",0.621],["p101_0389_0841.jpg",0.624],["p101_0390_0329.jpg",0.622],["p101_0707_0842.jpg",0.623],["p101_0708_0329.jpg",0.621],["p101_1214_0841.jpg",0.62],["p101_1215_0329.jpg",0.621],["p101_1532_0329.jpg",0.621],["p101_1532_0842.jpg",0.621],["p101_1849_0328.jpg",0.62],["p101_1849_0842.jpg",0.621],["p102_0072_0328.jpg",0.622],["p102_0073_0842.jpg",0.621],["p102_0390_0328.jpg",0.622],["p102_0391_0842.jpg",0.621],["p102_0707_0328.jpg",0.622],["p102_0708_0842.jpg",0.621],["p102_1214_0328.jpg",0.62],["p102_1214_0841.jpg",0.622],["p102_1531_0328.jpg",0.62],["p102_1532_0842.jpg",0.621],["p102_1848_0841.jpg",0.622],["p102_1849_0329.jpg",0.621],["p103_0072_0328.jpg",0.622],["p103_0073_0842.jpg",0.621],["p103_0390_0842.jpg",0.623],["p103_0391_0328.jpg",0.62],["p103_0707_0841.jpg",0.622],["p103_0708_0329.jpg",0.621],["p103_1214_0842.jpg",0.625],["p103_1215_0329.jpg",0.62],["p103_1532_0329.jpg",0.621],["p103_1532_0842.jpg",0.621],["p103_1849_0329.jpg",0.62],["p103_1849_0842.jpg",0.621],["p104_0073_0329.jpg",0.621],["p104_0073_0842.jpg",0.62],["p104_0390_0328.jpg",0.62],["p104_0390_0841.jpg",0.622],["p104_0708_0327.jpg",0.618],["p104_0708_0842.jpg",0.621],["p104_1213_0327.jpg",0.622],["p104_1215_0842.jpg",0.621],["p104_1532_0329.jpg",0.62],["p104_1532_0841.jpg",0.62],["p104_1849_0328.jpg",0.618],["p104_1849_0842.jpg",0.621],["p105_0073_0328.jpg",0.62],["p105_0073_0842.jpg",0.621],["p105_0390_0328.jpg",0.62],["p105_0391_0842.jpg",0.621],["p105_0708_0329.jpg",0.621],["p105_0708_0842.jpg",0.621],["p105_1214_0328.jpg",0.622],["p105_1215_0842.jpg",0.621],["p105_1532_0329.jpg",0.621],["p105_1532_0842.jpg",0.621],["p105_1849_0328.jpg",0.618],["p105_1849_0842.jpg",0.621],["p106_0073_0841.jpg",0.62],["p106_0390_0328.jpg",0.62],["p106_0390_0842.jpg",0.623],["p106_0708_0842.jpg",0.622],["p107_0073_0329.jpg",0.945],["p107_0073_0842.jpg",0.947],["p107_0548_0327.jpg",0.943],["p107_0548_0841.jpg",0.947],["p107_1214_0328.jpg",0.941],["p107_1215_0842.jpg",0.945],["p107_1691_0329.jpg",0.943],["p107_1691_0841.jpg",0.943]]}]},{"n":"05","t":"Epílogo","cover":null,"secs":[{"c":"05.1","t":"Uma carta à aldeia","items":[["poema.jpg",1.566]]},{"c":"05.2","t":"Sobre o projeto","items":[],"text":"<p class=\"lead\">Este projeto de investigação desenvolve-se na intersecção entre o design de informação, a cartografia psicogeográfica e as narrativas locais, tomando como caso de estudo a aldeia de Pescanseco Fundeiro.</p><p>O trabalho parte da recolha de dados qualitativos - entrevistas, histórias, fotografias atuais e antigas - e de dados quantitativos - questionários, levantamentos espaciais, registos populacionais - para construir representações visuais que traduzem a complexidade do território, conciliando memória e experiência com informação objetiva.</p><p>A metodologia integra práticas de cartografia crítica, inspiradas em Guy Debord e J. B. Harley, princípios de visualização de dados de Edward Tufte e estratégias de design paramétrico e generativo. O objetivo é explorar como o mapa pode ultrapassar a função descritiva tradicional, afirmando‑se como dispositivo cultural e narrativo capaz de mediar identidades coletivas.</p><p>O resultado esperado é um livro, entendido como objeto editorial, que reúne mapas, representações visuais do espaço e ensaios visuais, oferecendo uma visão expandida da aldeia e do seu quotidiano, partindo da premissa de que o espaço não é apenas o território, mas também quem o habita.</p><p>Para além de preservar e dar visibilidade a memórias locais, a investigação procura contribuir para o campo académico, demonstrando o potencial do design de informação na documentação e reinterpretação de realidades sociais complexas, muitas vezes ausentes das representações oficiais. Metodologicamente, o estudo assenta num estudo de caso único e numa abordagem de investigação através do design (research through design).</p><p class=\"kw\"><span>Palavras-chave</span>design de informação; cartografia psicogeográfica; design paramétrico; visualização de dados; comunidades rurais; narrativas visuais; memória coletiva.</p>"},{"c":"05.3","t":"Entre dado e memória","items":[],"text":"<p class=\"lead\">A abordagem adotada confronta, de forma deliberada, duas ordens de conhecimento que habitualmente são tratadas em separado: dados estruturados (estatísticos, espaciais, demográficos) e memórias subjetivas (histórias orais, narrativas afetivas, perceções individuais). A investigação torna visível a tensão entre estas duas dimensões, mas também as suas complementaridades, aproximando‑se de debates sobre memória coletiva e regimes de verdade.</p><p>Por um lado, os dados quantitativos e espaciais permitem estabelecer um retrato mínimo da aldeia: quantos habitantes existem, como se distribuem no território, que infraestruturas existem ou desapareceram, que vínculos formais ligam Pescanseco Fundeiro a escalas administrativas superiores. Esta camada oferece um quadro de referência que evita o risco de uma leitura puramente anedótica ou nostálgica do território.</p><p>Por outro lado, as memórias e narrativas revelam aquilo que os dados formais não captam: o valor simbólico de determinados lugares, o peso de certos acontecimentos na biografia coletiva, as emoções associadas a percursos, fronteiras invisíveis e zonas de esquecimento. A aldeia que emerge dos relatos não coincide necessariamente com a aldeia que aparece nos mapas oficiais; surgem deslocamentos, sobreposições e lacunas entre o vivido e o representado.</p><p>O trabalho desenvolvido mostra que a cartografia psicogeográfica e as visualizações híbridas podem funcionar como espaço de negociação entre estas duas ordens de conhecimento. Ao ancorar memórias em localizações concretas, ao codificar afetos e intensidades, ao introduzir deformações e camadas sobre mapas de base, torna‑se possível:</p><ul><li>Questionar a pretensa neutralidade dos dados “objetivos”;</li><li>Conferir estatuto gráfico e cognitivo a narrativas que, sem este processo, permaneceriam invisíveis;</li><li>Tornar explícitas as zonas de conflito entre o que é medido e o que é vivido.</li></ul><p>Neste sentido, o projeto não dissolve a tensão entre dado e memória; assume‑a como motor de desenho e reflexão, demonstrando que é precisamente nessa fricção que se produz conhecimento relevante sobre o território.</p>"},{"c":"05.4","t":"O design de informação como mediador cultural","items":[],"text":"<p class=\"lead\">Uma das principais ambições da investigação é reforçar a compreensão do design de informação como prática de mediação cultural, e não apenas como exercício de clarificação gráfica. Ao longo do projeto, o design atua em três frentes complementares.</p><p>Em primeiro lugar, como mediador entre disciplinas. A construção de mapas, diagramas e visualizações exige articular conceitos da geografia, antropologia, sociologia rural, estudos de memória e teoria da cartografia crítica. O design de informação traduz estas linguagens disciplinares para um sistema visual coerente, tornando compatíveis, num mesmo suporte, unidades de medida, relatos biográficos, registos históricos e observação empírica.</p><p>Em segundo lugar, como mediador entre escalas. Os dispositivos visuais produzidos permitem passar da escala do corpo e da experiência diária (o caminho para o campo, a casa abandonada, o tanque) para escalas mais alargadas (configuração da aldeia, relação com a freguesia, dinâmicas regionais de despovoamento). Mapas e diagramas funcionam como interfaces entre micro e macro, tornando visíveis relações que, de outro modo, permaneceriam dispersas.</p><p>Em terceiro lugar, como mediador entre públicos. O livro e as visualizações psicogeográficas não se destinam apenas à comunidade académica; são concebidos para serem apropriados pela comunidade local, por decisores institucionais e por outros agentes que intervêm no território. O design de informação assume, neste contexto, um papel político discreto: ao tornar legível uma realidade complexa, abre espaço para que diferentes atores possam participar de forma mais informada na discussão sobre o presente e o futuro da aldeia.</p><p>O contributo central deste projeto reside, assim, na demonstração de que o design de informação pode operar como tecnologia cultural: uma prática que não se limita a organizar dados, mas que constrói enquadramentos de leitura, define o que é visível e estabelece condições para o debate sobre identidades coletivas e usos do território.</p>"},{"c":"05.5","t":"Limitações e caminhos futuros","items":[],"text":"<p class=\"lead\">Apesar dos contributos identificados, o projeto apresenta limitações que importa reconhecer, tanto para delimitar o alcance das conclusões como para orientar investigações futuras.</p><p>Uma primeira limitação resulta da natureza de estudo de caso único. Pescanseco Fundeiro é uma aldeia com características específicas, em termos de dimensão, história, perfil demográfico e relação com o território envolvente. As conclusões aqui produzidas não podem ser generalizadas automaticamente a outras comunidades rurais; o valor do estudo reside sobretudo na sua capacidade exemplar, como caso piloto de aplicação de cartografia psicogeográfica e design de informação a um contexto de baixa densidade.</p><p>Uma segunda limitação decorre da recolha de dados. A participação em entrevistas, questionários e exercícios de mapeamento depende da disponibilidade, confiança e interesse dos habitantes. É provável que determinados grupos (por exemplo, pessoas mais idosas, residentes sazonais ou habitantes que se afastaram da vida comunitária) estejam sub‑representados. Além disso, a investigação decorre num recorte temporal limitado, o que impede uma análise aprofundada de processos de mudança lenta, como a transformação dos usos do solo ou a evolução das redes de vizinhança ao longo de várias décadas.</p><p>Uma terceira limitação está relacionada com recursos técnicos e de produção. As opções de software, os formatos de impressão, a extensão do livro e a possibilidade de atualização futura das visualizações são condicionadas por tempo, orçamento e competências especializadas disponíveis. Algumas possibilidades de exploração paramétrica ou de interação digital (como mapas dinâmicos ou plataformas online) permanecem, neste contexto, apenas delineadas em termos conceptuais.</p><p>Estas limitações abrem, contudo, um conjunto de oportunidades futuras:</p><ul><li>Replicação e comparação: aplicar o método desenvolvido a outras aldeias ou territórios rurais, permitindo estudos comparativos sobre padrões de despovoamento, memória e uso do espaço.</li><li>Aprofundamento participativo: envolver de forma mais sistemática escolas, associações locais e grupos informais em processos de mapeamento colaborativo, garantindo maior diversidade de vozes.</li><li>Extensão temporal: retomar o caso de Pescanseco Fundeiro num horizonte de médio prazo, atualizando dados e visualizações para observar continuidades e ruturas.</li><li>Desenvolvimento digital: complementar o livro com um arquivo ou plataforma digital que permita explorar os dados em maior detalhe, bem como acrescentar novos contributos da comunidade ao longo do tempo.</li></ul><p>Em síntese, a discussão e os contributos aqui apresentados indicam que o potencial do design de informação e da cartografia psicogeográfica está longe de se esgotar neste estudo. O projeto demonstra a viabilidade de uma abordagem que articula dado e memória, crítica cartográfica e mediação cultural, oferecendo uma base sólida para investigações futuras sobre visualização de informação e realidades sociais complexas em contextos rurais.</p>"}]}];
+/* 00.1 — zoom de satélite controlado pelo scroll */
+function zoomPanel(overlay){
+  const steps=[['a07.jpg','País'],['a08.jpg','Região'],['a09.jpg','Serra'],['a010.jpg','Vale'],['a011.jpg','Pescanseco Fundeiro'],['aldeia.jpg','A aldeia, vista de cima']];
+  const wrap=document.createElement('div');wrap.className='zm';wrap.style.height=(steps.length*(overlay?150:90)+40)+'vh';
+  wrap.innerHTML='<div class="zm-stage">'+steps.map((s,i)=>'<img src="i/'+s[0]+'" alt="'+s[1]+'" '+(i?'loading="lazy"':'')+'>').join('')
+    +'<div class="zm-lab"><span class="zm-n mono">01 / 0'+steps.length+'</span><span class="zm-t">'+steps[0][1]+'</span></div>'
+    +'<div class="zm-hint mono">Desce para aproximar ↓</div><div class="zm-bar"><span></span></div>'+(overlay?'<div class="zm-txt" aria-label="Texto de introdução"><div class="zm-txt-in">'+overlay+'</div></div>':'')+'</div>';
+  const tx=wrap.querySelector('.zm-txt'),txin=wrap.querySelector('.zm-txt-in'),imgs=[...wrap.querySelectorAll('img')],lab=wrap.querySelector('.zm-t'),num=wrap.querySelector('.zm-n'),bar=wrap.querySelector('.zm-bar span'),hint=wrap.querySelector('.zm-hint');
+  let raf=0,last=-1;
+  function upd(){raf=0;if(!wrap.offsetParent)return;
+    const r=wrap.getBoundingClientRect(),st=wrap.firstChild.offsetHeight,p=Math.min(1,Math.max(0,-r.top/Math.max(1,r.height-st)));
+    const seg=p*(steps.length-1),i=Math.min(steps.length-2,Math.floor(seg)),f=seg-i;
+    imgs.forEach((im,j)=>{let o=0,s=1;
+      if(j===i){o=1;s=1+f*1.4;}else if(j===i+1){o=Math.min(1,f*1.6);s=0.5+0.5*f;}
+      im.style.opacity=o;im.style.transform='scale('+s+')';});
+    const cur=Math.round(seg);if(cur!==last){last=cur;lab.textContent=steps[cur][1];num.textContent=String(cur+1).padStart(2,'0')+' / '+String(steps.length).padStart(2,'0');}
+    bar.style.width=(p*100)+'%';hint.style.opacity=p>0.03?0:1;
+    if(tx){const q=Math.min(1,Math.max(0,(p-0.5)/0.48));tx.classList.toggle('on',p>0.5);lab.parentNode.style.opacity=p>0.5?0:1;
+      const max=Math.max(0,txin.scrollHeight-tx.clientHeight);txin.style.transform='translateY('+(-q*max)+'px)';}}
+  addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(upd);},{passive:true});
+  addEventListener('resize',upd);addEventListener('viewchange',()=>requestAnimationFrame(upd));
+  return wrap;
+}
+
+/* 00.2 — percurso horizontal pelos anos, guiado pelo scroll */
+function trackPanel(s,ci,k0){
+  const yr=f=>{const y=f.split('/').pop().slice(0,4);return y==='0000'?'Chegada':y;};
+  const years=[...new Set(s.items.map(([f])=>yr(f)).filter(y=>y!=='Chegada'))];
+  const y0=+years[0],y1=+years[years.length-1];
+  const wrap=document.createElement('div');wrap.className='tk';wrap.style.height=(s.items.length*60+100)+'vh';
+  let h='<div class="tk-stage"><div class="tk-row">';
+  s.items.forEach(([f,r],i)=>{h+='<figure class="tk-fig" data-y="'+yr(f)+'"><button type="button" class="cell tk-cell" data-ch="'+ci+'" data-k="'+(k0+i)+'" style="aspect-ratio:'+r+'" aria-label="'+s.c+' '+s.t+', '+yr(f)+'"><img src="i/'+f+'" alt="" loading="'+(i<3?'eager':'lazy')+'"></button><figcaption class="mono">'+yr(f)+'</figcaption></figure>';});
+  h+='</div><div class="tk-rule">';
+  for(let y=y0;y<=y1;y++)h+='<span class="tk-y'+(years.includes(String(y))?' has':'')+'" style="left:'+((y-y0)/(y1-y0)*100)+'%"><i></i><b class="mono">'+y+'</b></span>';
+  h+='<span class="tk-mk"></span></div><div class="tk-big" aria-hidden="true"></div></div>';
+  wrap.innerHTML=h;
+  const row=wrap.querySelector('.tk-row'),mk=wrap.querySelector('.tk-mk'),big=wrap.querySelector('.tk-big'),figs=[...wrap.querySelectorAll('.tk-fig')],ys=[...wrap.querySelectorAll('.tk-y')];
+  let raf=0;
+  function upd(){raf=0;if(!wrap.offsetParent)return;
+    const r=wrap.getBoundingClientRect(),st=wrap.firstChild.offsetHeight,p=Math.min(1,Math.max(0,-r.top/Math.max(1,r.height-st)));
+    const max=Math.max(0,row.scrollWidth-innerWidth+parseFloat(getComputedStyle(row).paddingRight||0));
+    row.style.transform='translate3d('+(-p*max)+'px,0,0)';
+    const mid=innerWidth*0.5;let cur=figs[0],best=1e9;
+    figs.forEach(f=>{const b=f.getBoundingClientRect(),d=Math.abs(b.left+b.width/2-mid);if(d<best){best=d;cur=f;}});
+    figs.forEach(f=>f.classList.toggle('on',f===cur));
+    const arr=cur.dataset.y==='Chegada',y=arr?y0:+cur.dataset.y;big.textContent=arr?'Chegada':y;big.classList.toggle('word',arr);mk.style.left=arr?'0%':((y-y0)/(y1-y0)*100)+'%';mk.classList.toggle('arr',arr);
+    ys.forEach(e=>e.classList.toggle('on',!arr&&e.textContent==String(y)));}
+  addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(upd);},{passive:true});
+  addEventListener('resize',upd);addEventListener('viewchange',()=>requestAnimationFrame(upd));
+  return wrap;
+}
+
+
+/* 00.3 — voo de drone: as imagens espalham-se e juntam-se numa grelha */
+function scatterPanel(s,ci,k0){
+  const wrap=document.createElement('div');wrap.className='sc';
+  const g=document.createElement('div');g.className='grid sc-grid';
+  s.items.forEach(([f,r],i)=>{const b=document.createElement('button');b.type='button';b.className='cell';b.dataset.ch=ci;b.dataset.k=k0+i;
+    b.style.flexGrow=r;b.style.width='calc(var(--row) * '+r+')';b.style.transitionDelay=(i*22)+'ms';
+    b.setAttribute('aria-label',s.c+' '+s.t+', imagem '+(i+1));
+    b.innerHTML='<i style="padding-bottom:'+(100/r).toFixed(3)+'%"></i><img src="i/'+f+'" alt="" loading="lazy" decoding="async">';g.appendChild(b);});
+  const btn=document.createElement('button');btn.type='button';btn.className='mz-btn mono';btn.textContent='Espalhar';
+  wrap.appendChild(btn);wrap.appendChild(g);
+  const tiles=[...g.children];
+  if(s.overlay){
+    const tx=document.createElement('div');tx.className='zm-txt sc-txt';tx.setAttribute('aria-label','Texto');tx.innerHTML='<div class="zm-txt-in">'+s.overlay+'</div>';wrap.appendChild(tx);
+    const txin=tx.firstChild;let raf=0;
+    const upd=()=>{raf=0;if(!wrap.offsetParent){tx.classList.remove('on');return;}
+      const r=g.getBoundingClientRect(),span=Math.max(1,r.height-innerHeight),p=Math.min(1,Math.max(0,-r.top/span));
+      if(innerWidth<900){tx.classList.add('on');txin.style.transform='none';return;}
+      tx.classList.add('on');
+      const q=Math.min(1,Math.max(0,p/0.96)),max=Math.max(0,txin.scrollHeight-tx.clientHeight);txin.style.transform='translateY('+(-q*max)+'px)';};
+    addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(upd);},{passive:true});addEventListener('resize',upd);addEventListener('viewchange',()=>requestAnimationFrame(upd));
+  }
+  function scatter(){tiles.forEach(t=>{const dx=(Math.random()-.5)*innerWidth*.6,dy=(Math.random()-.5)*innerHeight*.5,r=(Math.random()-.5)*40;t.style.transform='translate('+dx+'px,'+dy+'px) rotate('+r+'deg) scale(.8)';});g.classList.add('loose');btn.textContent='Juntar';}
+  function gather(){tiles.forEach(t=>t.style.transform='none');g.classList.remove('loose');btn.textContent='Espalhar';}
+  btn.onclick=()=>g.classList.contains('loose')?gather():scatter();
+  addEventListener('viewchange',e=>{if(e.detail===sid(s.c)){scatter();setTimeout(gather,350);}});
+  return wrap;
+}
+
+/* 00.3 — as fotografias de drone juntam-se na grelha do livro */
+function mosaicPanel(s,ci,k0){
+  const wrap=document.createElement('div');wrap.className='mz';
+  const board=document.createElement('div');board.className='mz-board';board.style.aspectRatio=s.geo.ar;
+  wrap.style.setProperty('--ar',s.geo.ar);
+  s.items.forEach(([f],i)=>{const g=s.geo.t[f];const b=document.createElement('button');b.type='button';b.className='cell mt';b.dataset.ch=ci;b.dataset.k=k0+i;
+    b.setAttribute('aria-label',s.c+' '+s.t+', imagem '+(i+1));
+    b.style.left=g[0]+'%';b.style.top=g[1]+'%';b.style.width=g[2]+'%';b.style.height=g[3]+'%';b.style.transitionDelay=(i*18)+'ms';
+    b.innerHTML='<img src="i/'+f+'" alt="" loading="lazy">';board.appendChild(b);});
+  const btn=document.createElement('button');btn.type='button';btn.className='mz-btn mono';btn.textContent='Espalhar';
+  wrap.appendChild(board);wrap.appendChild(btn);
+  const tiles=[...board.children];
+  function scatter(){tiles.forEach(t=>{const dx=(Math.random()-.5)*120,dy=(Math.random()-.5)*90,r=(Math.random()-.5)*50;t.style.transform='translate('+dx+'%,'+dy+'%) rotate('+r+'deg) scale(.85)';});board.classList.add('loose');btn.textContent='Juntar';}
+  function gather(){tiles.forEach(t=>t.style.transform='none');board.classList.remove('loose');btn.textContent='Espalhar';}
+  btn.onclick=()=>board.classList.contains('loose')?gather():scatter();
+  scatter();
+  addEventListener('viewchange',e=>{if(e.detail===sid(s.c)){scatter();setTimeout(gather,350);}});
+  return wrap;
+}
+
+const sid=c=>'cap-'+c.replace(/\./g,'-');
+const lvl=c=>c.split('.').length;
+const LIST=[];let TOTAL=0;const MODS=[];
+const idx=document.getElementById('idx'),chaps=document.getElementById('chaps');
+
+C.forEach((ch,ci)=>{
+  const items=[];ch.secs.forEach(s=>s.items.forEach(([f])=>items.push([f,s.c,s.t])));
+  LIST.push(items);TOTAL+=items.length;
+  const live=s=>s.items.length>0||!!s.mod||!!s.text||ch.secs.some(d=>d.c.startsWith(s.c+'.')&&(d.items.length>0||d.mod));
+
+  /* índice: só o capítulo */
+  const peekSrc=ch.cover||(items.length?items[Math.floor(items.length/2)][0]:'');
+  const li=document.createElement('li');
+  li.innerHTML='<a href="#'+sid(ch.n)+'"'+(peekSrc?' data-peek="i/'+peekSrc+'"':'')+'><span class="n">'+ch.n+'.</span><em>'+ch.t+'</em><sup>'+(items.length||'—')+'</sup></a>';
+  idx.appendChild(li);
+
+  /* página do capítulo: subíndice sobreposto ao conteúdo, um subcapítulo de cada vez */
+  const page=document.createElement('section');page.className='chap view'+(ch.n==='05'?' flow':'');page.id=sid(ch.n);page.hidden=true;page.setAttribute('aria-label',ch.n+'. '+ch.t);
+  const panelOf=s=>s.items.length>0||!!s.mod||!!s.text;
+  let nav='';
+  ch.secs.forEach(s=>{
+    const inner='<span class="c">'+s.c+'</span><span class="t">'+s.t+'</span>';
+    const L=lvl(s.c);
+    if(panelOf(s))nav+='<li class="l'+L+'"><a href="#'+sid(s.c)+'" data-s="'+sid(s.c)+'">'+inner+'</a></li>';
+    else nav+='<li class="l'+L+'"><span class="it'+(live(s)?'':' off')+'">'+inner+'</span></li>';
+  });
+  page.innerHTML='<nav class="subnav" aria-label="Subcapítulos de '+ch.n+'. '+ch.t+'"><button type="button" class="tg" aria-expanded="false"></button><div class="head"><span>'+ch.n+'.</span> <span>'+ch.t+'</span></div><ol>'+nav+'</ol></nav>';
+  const tg=page.querySelector('.tg');tg.onclick=()=>{const o=page.querySelector('.subnav').classList.toggle('open');tg.setAttribute('aria-expanded',o?'true':'false');};
+
+  const body=document.createElement('div');body.className='panels';
+  let k=0;
+  ch.secs.forEach(s=>{
+    if(!panelOf(s))return;
+    const n=s.items.length;
+    const el=document.createElement('section');el.className='panel';el.id=sid(s.c);el.hidden=true;el.setAttribute('aria-label',s.c+' '+s.t);el.dataset.label=s.c+' '+s.t;
+    if(s.mod==='familias'){const host=document.createElement('div');host.className='fxhost';el.appendChild(host);el.classList.add('panel-fx');MODS.push(()=>mountFamilias(host));}
+    if(s.text){el.classList.add('panel-txt');el.innerHTML='<article class="txt"><div class="txt-col"><p class="mono txt-c">'+s.c+'</p><h2>'+s.t+'</h2>'+s.text+'</div></article>';}
+    if(s.mod==='zoom'){el.classList.add('panel-zoom');el.appendChild(zoomPanel(s.overlay));k+=n;}
+    else if(s.mod==='track'){el.classList.add('panel-track');el.appendChild(trackPanel(s,ci,k));k+=n;}
+    else if(s.mod==='scatter'){el.classList.add('panel-scatter');el.appendChild(scatterPanel(s,ci,k));k+=n;}
+    else if(s.mod==='mosaic'){el.classList.add('panel-mosaic');el.appendChild(mosaicPanel(s,ci,k));k+=n;}
+    else if(n){
+      const g=document.createElement('div');g.className='grid';
+      s.items.forEach(([f,r])=>{
+        const b=document.createElement('button');b.type='button';b.className='cell';b.dataset.ch=ci;b.dataset.k=k++;
+        b.style.flexGrow=r;b.style.width='calc(var(--row) * '+r+')';
+        b.setAttribute('aria-label',s.c+' '+s.t+', imagem '+k);
+        b.innerHTML='<i style="padding-bottom:'+(100/r).toFixed(3)+'%"></i><img src="i/'+f+'" alt="" loading="lazy" decoding="async">';
+        g.appendChild(b);
+      });
+      el.appendChild(g);
+      if(n===1){el.classList.add('panel-solo');const c=g.firstChild;c.style.flexGrow=0;c.style.width='min(100%, 1180px, calc((100svh - var(--bar) - 120px) * '+s.items[0][1]+'))';}
+    }
+    body.appendChild(el);
+  });
+  page.appendChild(body);
+
+  const p=C[ci-1],n=C[ci+1];
+  const pg=document.createElement('nav');pg.className='pager';pg.setAttribute('aria-label','Capítulos');
+  pg.innerHTML=(p?'<a href="#'+sid(p.n)+'"><span class="mono">← '+p.n+'</span><span><em>'+p.t+'</em></span></a>':'<a href="#indice"><span class="mono">←</span><span>Menu</span></a>')
+             +(n?'<a class="nx" href="#'+sid(n.n)+'"><span class="mono">'+n.n+' →</span><span><em>'+n.t+'</em></span></a>':'<a class="nx" href="#indice"><span class="mono">→</span><span>Menu</span></a>');
+  page.appendChild(pg);
+  chaps.appendChild(page);
+});
+
+/* pré-visualização no índice */
+const peek=document.getElementById('peek'),pimg=peek.querySelector('img');
+if(matchMedia('(hover:hover) and (pointer:fine)').matches){
+  idx.addEventListener('pointerover',e=>{const a=e.target.closest('a');if(!a)return;if(a.dataset.peek){pimg.src=a.dataset.peek;peek.classList.add('on');}else peek.classList.remove('on');});
+  idx.addEventListener('pointerleave',()=>peek.classList.remove('on'));
+  idx.addEventListener('pointermove',e=>{peek.style.left=e.clientX+'px';peek.style.top=e.clientY+'px';});
+}
+
+/* páginas */
+const views=[...document.querySelectorAll('.view')],foot=document.getElementById('foot'),mid=document.getElementById('nav-mid');
+const navHome=document.getElementById('nav-home'),navIdx=document.getElementById('nav-idx');
+let current=null;
+function route(){
+  const h=location.hash.slice(1);
+  let view='inicio',panel=null;
+  if(h==='indice')view='indice';
+  else if(h==='historia')view='historia';
+  else{const m=h.match(/^cap-(\d\d)((?:-\d+)*)$/);if(m&&document.getElementById('cap-'+m[1])){view='cap-'+m[1];
+    const pg=document.getElementById(view),panels=[...pg.querySelectorAll('.panel')];
+    panel=(m[2]&&(document.getElementById(h)&&document.getElementById(h).classList.contains('panel')?document.getElementById(h):panels.find(x=>x.id.startsWith(h+'-'))))||panels[0]||null;
+    const flow=pg.classList.contains('flow');
+    panels.forEach(x=>x.hidden=flow?false:x!==panel);
+    pg.querySelectorAll('.subnav a').forEach(a=>{if(panel&&a.dataset.s===panel.id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+    const sn=pg.querySelector('.subnav');sn.classList.remove('open');sn.classList.toggle('dark',!!(panel&&(panel.classList.contains('panel-fx')||panel.classList.contains('panel-zoom'))));sn.querySelector('.tg').textContent=panel?panel.dataset.label:ch_label(m[1]);sn.querySelector('.tg').setAttribute('aria-expanded','false');}}
+  const changed=view!==current;current=view;
+  views.forEach(v=>v.hidden=v.id!==view);
+  foot.hidden=view==='inicio';
+  if(view==='inicio')navHome.setAttribute('aria-current','page');else navHome.removeAttribute('aria-current');
+  if(view==='indice')navIdx.setAttribute('aria-current','page');else navIdx.removeAttribute('aria-current');
+  const ch=C.find(c=>sid(c.n)===view);
+  mid.textContent=ch?ch.n+'. '+ch.t:'Arquivo visual · '+TOTAL+' imagens';
+  document.title='Pescanseco Fundeiro'+(ch?' · '+ch.n+'. '+ch.t:view==='indice'?' · Menu':view==='historia'?' · Não pares a história':'');
+  peek.classList.remove('on');
+  const flowPg=ch_flow(view);
+  if(flowPg&&panel&&location.hash.slice(1)!==view)requestAnimationFrame(()=>panel.scrollIntoView({behavior:changed?'auto':'smooth',block:'start'}));else window.scrollTo(0,0);
+  if(view==='inicio'&&changed)dispatchEvent(new Event('resize'));
+  if(ch){const sn=document.querySelector('#'+view+' .subnav'),setH=()=>{document.documentElement.style.setProperty('--subh',sn.offsetHeight+'px');};setH();if(document.fonts)document.fonts.ready.then(setH);}
+  dispatchEvent(new CustomEvent('viewchange',{detail:panel?panel.id:view}));
+}
+function ch_flow(v){const e=document.getElementById(v);return !!(e&&e.classList.contains('flow'));}
+function ch_label(n){const c=C.find(c=>c.n===n);return c?c.n+'. '+c.t:'';}
+addEventListener('hashchange',route);
+(function(){let raf=0;function mark(){raf=0;const pg=document.querySelector('.flow:not([hidden])');if(!pg)return;const ps=[...pg.querySelectorAll('.panel')];const y=innerHeight*0.35;let cur=ps[0];ps.forEach(p=>{if(p.getBoundingClientRect().top<=y)cur=p;});if(innerHeight+scrollY>=document.documentElement.scrollHeight-4)cur=ps[ps.length-1];pg.querySelectorAll('.subnav a').forEach(a=>{if(a.dataset.s===cur.id)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
+addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(mark);},{passive:true});addEventListener('hashchange',()=>setTimeout(mark,600));})();
+
+/* imagem em grande, dentro do capítulo */
+const lb=document.getElementById('lb'),big=document.getElementById('big'),cnt=document.getElementById('cnt');
+let lc=0,li=0,last=null;
+function show(i){const L=LIST[lc];li=(i+L.length)%L.length;const [f,c,t]=L[li];big.src='i/'+f;cnt.textContent=c+' '+t+' — '+String(li+1).padStart(3,'0')+' / '+L.length;}
+function open(i){show(i);lb.hidden=false;document.body.style.overflow='hidden';document.getElementById('close').focus();}
+function close(){lb.hidden=true;document.body.style.overflow='';if(last)last.focus();}
+chaps.addEventListener('click',e=>{const b=e.target.closest('.cell');if(!b)return;last=b;lc=+b.dataset.ch;open(+b.dataset.k);});
+document.getElementById('prev').onclick=()=>show(li-1);
+document.getElementById('next').onclick=()=>show(li+1);
+document.getElementById('close').onclick=close;
+document.getElementById('stage').onclick=e=>{if(e.target.id==='stage'||e.target===big)close();};
+document.addEventListener('keydown',e=>{if(lb.hidden)return;if(e.key==='Escape')close();else if(e.key==='ArrowRight')show(li+1);else if(e.key==='ArrowLeft')show(li-1);});
+let tx=null;lb.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+lb.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>40)show(li+(dx<0?1:-1));tx=null;});
+
+/* abertura: a aldeia revela-se em "casas" (retângulos e quadrados) por onde o cursor passa; sem cursor, uma deriva */
+(function(){
+  const hero=document.querySelector('.hero'),cv=document.getElementById('px'),ctx=cv.getContext('2d');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const GREEN='#142916';
+  const src=new Image();src.src='i/aldeia.jpg';
+  const ln=new Image();ln.src='i/linhas.png';let offL=null;
+  let W=0,H=0,dpr=1,u=26,off=null,ptr=null,lastPtr=0,dx=.5,dy=.4,ang=Math.random()*6.28,raf=0,visible=true,frame=0;
+  let houses=[];
+  function size(){
+    dpr=Math.min(2,window.devicePixelRatio||1);W=hero.clientWidth;H=hero.clientHeight;
+    cv.width=W*dpr;cv.height=H*dpr;u=W<600?26:38;houses=[];
+    if(src.complete&&src.naturalWidth)prep();
+  }
+  function prep(){
+    off=document.createElement('canvas');off.width=W*dpr;off.height=H*dpr;
+    const o=off.getContext('2d'),ir=src.naturalWidth/src.naturalHeight,cr=W/H;
+    let sw,sh,sx,sy;if(ir>cr){sh=src.naturalHeight;sw=sh*cr;sx=(src.naturalWidth-sw)/2;sy=0;}else{sw=src.naturalWidth;sh=sw/cr;sx=0;sy=(src.naturalHeight-sh)/2;}
+    o.drawImage(src,sx,sy,sw,sh,0,0,off.width,off.height);
+    prepL();
+  }
+  // desenho das casas em linha, alinhado com a fotografia (mesmo enquadramento)
+  function prepL(){
+    if(!(ln.complete&&ln.naturalWidth&&src.naturalWidth))return;
+    offL=document.createElement('canvas');offL.width=W*dpr;offL.height=H*dpr;
+    const o=offL.getContext('2d'),ir=src.naturalWidth/src.naturalHeight,cr=W/H,kx=ln.naturalWidth/src.naturalWidth,ky=ln.naturalHeight/src.naturalHeight;
+    let sw,sh,sx,sy;if(ir>cr){sh=src.naturalHeight;sw=sh*cr;sx=(src.naturalWidth-sw)/2;sy=0;}else{sw=src.naturalWidth;sh=sw/cr;sx=0;sy=(src.naturalHeight-sh)/2;}
+    o.drawImage(ln,sx*kx,sy*ky,sw*kx,sh*ky,0,0,offL.width,offL.height);
+  }
+  // uma casa: retângulo ou quadrado, com a orientação ligeiramente torta como as implantações da aldeia
+  function house(x,y,life){
+    const sq=Math.random()<.35;
+    const w=u*(sq?1+Math.random()*.9:1.1+Math.random()*1.6);
+    const h=sq?w*(.9+Math.random()*.2):u*(.7+Math.random()*.8);
+    const a=(Math.random()-.5)*.6+(Math.random()<.5?0:Math.PI/2);
+    houses.push({x,y,w,h,a,l:life,d:.0055+Math.random()*.003});
+  }
+  function stamp(x,y,r,n){
+    for(let k=0;k<n;k++){const t=Math.random()*6.283,d=Math.sqrt(Math.random())*r;house(x+Math.cos(t)*d,y+Math.sin(t)*d,1);}
+  }
+  function draw(){
+    ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+    if(offL)ctx.drawImage(offL,0,0);
+    if(!off)return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    for(const o of houses){
+      ctx.save();ctx.translate(o.x,o.y);ctx.rotate(o.a);
+      ctx.beginPath();ctx.rect(-o.w/2,-o.h/2,o.w,o.h);
+      if(o.l>.14){
+        ctx.clip();ctx.rotate(-o.a);ctx.translate(-o.x,-o.y);
+        const R=Math.hypot(o.w,o.h)/2+1,bx=Math.max(0,o.x-R),by=Math.max(0,o.y-R),bw=Math.min(W,o.x+R)-bx,bh=Math.min(H,o.y+R)-by;
+        if(bw>0&&bh>0)ctx.drawImage(off,bx*dpr,by*dpr,bw*dpr,bh*dpr,bx,by,bw,bh);
+      }else{ctx.fillStyle=GREEN;ctx.fill();}
+      ctx.restore();
+    }
+  }
+  function tick(t){
+    if(!visible){raf=0;return;}
+    frame++;
+    for(const o of houses)o.l-=o.d;
+    houses=houses.filter(o=>o.l>0);
+    if(frame%2===0){
+      if(ptr&&t-lastPtr<1600){stamp(ptr.x,ptr.y,Math.max(64,W*.065),2);}
+      else{
+        ang+=(Math.random()-.5)*.5;dx+=Math.cos(ang)*.006;dy+=Math.sin(ang)*.006*W/H;
+        if(dx<.05||dx>.95){ang=Math.PI-ang;dx=Math.min(.95,Math.max(.05,dx));}
+        if(dy<.08||dy>.75){ang=-ang;dy=Math.min(.75,Math.max(.08,dy));}
+        stamp(dx*W,dy*H,Math.max(58,W*.06),2);
+      }
+    }
+    draw();raf=requestAnimationFrame(tick);
+  }
+  function still(){
+    houses=[];
+    for(let n=0;n<120;n++){ang+=(Math.random()-.5)*.6;dx=Math.min(.92,Math.max(.08,dx+Math.cos(ang)*.012));dy=Math.min(.72,Math.max(.1,dy+Math.sin(ang)*.012*W/H));stamp(dx*W,dy*H,Math.max(44,W*.045),1);}
+    houses.forEach(o=>o.l=Math.random()<.2?.1:.5);
+    draw();
+  }
+  hero.addEventListener('pointermove',e=>{const r=hero.getBoundingClientRect();ptr={x:e.clientX-r.left,y:e.clientY-r.top};lastPtr=performance.now();});
+  hero.addEventListener('pointerleave',()=>{if(ptr){dx=ptr.x/W;dy=ptr.y/H;}ptr=null;});
+  src.onload=()=>{prep();if(reduce)still();};
+  ln.onload=()=>{prepL();if(reduce)still();else draw();};
+  size();
+  addEventListener('resize',()=>{size();if(reduce)still();});
+  if(!reduce){
+    new IntersectionObserver(es=>{visible=es[0].isIntersecting;if(visible&&!raf)raf=requestAnimationFrame(tick);}).observe(hero);
+  }
+})();
+
+
+/* 03.4.1 famílias: árvore interativa (os nomes foram substituídos por códigos) */
+function mountFamilias(host){
+  host.innerHTML='<div class="fx">'
+   +'<div class="fx-tabs" role="group" aria-label="Famílias"></div>'
+   +'<div class="fx-bar"><div class="fx-gens" role="group" aria-label="Gerações"><span class="mono">Gerações</span></div>'
+   +'<div class="fx-zoom"><span class="mono">Escala</span><button type="button" data-z="out" aria-label="Afastar">−</button><button type="button" data-z="in" aria-label="Aproximar">+</button><button type="button" data-z="fit">Ver tudo</button></div></div>'
+   +'<div class="fx-wrap"><div class="fx-stage" tabindex="0" aria-label="Árvore da família. Arrasta para percorrer."><svg class="fx-svg" xmlns="http://www.w3.org/2000/svg" role="img"></svg></div>'
+   +'<div class="fx-card" aria-live="polite"></div></div>'
+   +'<div class="fx-mini" aria-hidden="true"><svg class="fx-msvg" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"></svg><span class="fx-view"></span></div>'
+   +'<div class="fx-legend mono"><span>(?) pessoa não identificada</span>'
+   +'<span><svg viewBox="0 0 18 10"><circle cx="6.5" cy="5" r="3.6"/><circle cx="11.5" cy="5" r="3.6"/></svg>casamento ou união</span>'
+   +'<span><svg viewBox="0 0 18 10"><circle cx="6.5" cy="5" r="3.6"/><circle cx="11.5" cy="5" r="3.6"/><line x1="5" y1="10" x2="13" y2="0"/></svg>separação ou divórcio</span>'
+   +'<span>1º 2º primeira e segunda união</span></div></div>';
+  const $=s=>host.querySelector(s);
+  const tabs=$('.fx-tabs'),gens=$('.fx-gens'),stage=$('.fx-stage'),svg=$('.fx-svg'),card=$('.fx-card'),mini=$('.fx-mini'),msvg=$('.fx-msvg'),view=$('.fx-view');
+  let F=null,cur=0,z=1,sel=null,gsel=null,cpm=[],fs=10;
+  const code=p=>p.u?'(?)':p.n;const NM={};
+  FAM.forEach((f,i)=>{const b=document.createElement('button');b.type='button';b.className='fx-tab';b.setAttribute('aria-pressed',i===0?'true':'false');
+    b.innerHTML='<span class="n">'+String(i+1).padStart(2,'0')+'</span><span>'+f.t+'</span><span class="k">'+f.P.length+'</span>';b.onclick=()=>load(i);tabs.appendChild(b);});
+  function load(i){
+    cur=i;F=FAM[i];sel=null;gsel=null;
+    tabs.querySelectorAll('.fx-tab').forEach((b,j)=>b.setAttribute('aria-pressed',j===i?'true':'false'));
+    cpm=F.cp.map(()=>[]);F.P.forEach((p,k)=>p.cp.forEach(c=>cpm[c].push(k)));
+    draw();drawMini();buildGens();z=1;size();stage.scrollLeft=0;stage.scrollTop=0;idle();
+  }
+  function draw(){
+    const [x0,y0,x1,y1]=F.box,W=x1-x0,H=y1-y0;
+    fs=Math.max(F.h0*0.85,H*0.018);
+    svg.setAttribute('viewBox',x0+' '+y0+' '+W+' '+H);
+    svg.setAttribute('aria-label',F.t+': '+F.P.length+' pessoas');
+    let h='';
+    F.segs.forEach((s,i)=>{h+='<line class="sg" data-i="'+i+'" x1="'+s[0]+'" y1="'+s[1]+'" x2="'+s[2]+'" y2="'+s[3]+'"/>';});
+    F.sl.forEach(s=>{h+='<line class="sl" x1="'+s[0]+'" y1="'+s[1]+'" x2="'+s[2]+'" y2="'+s[3]+'"/>';});
+    F.cp.forEach((c,i)=>{h+='<g class="cp" data-i="'+i+'"><circle cx="'+(c[0]-2.5)+'" cy="'+c[1]+'" r="'+c[2]+'"/><circle cx="'+(c[0]+2.5)+'" cy="'+c[1]+'" r="'+c[2]+'"/></g>';});
+    F.dots.forEach(d=>{h+='<circle class="dt" cx="'+d[0]+'" cy="'+d[1]+'" r="'+d[2]+'"/>';});
+    F.P.forEach((p,k)=>{const lab=code(p);
+      p.b.forEach(b=>{const cx=(b[0]+b[2])/2,ty=b[1]+fs*0.92,bw=fs*0.62*lab.length+fs*0.7;
+        h+='<g class="pp'+(p.u?' unk':'')+'" data-k="'+k+'" tabindex="0" role="button" aria-label="'+lab+', '+p.g+'.ª geração">'
+          +'<rect class="bg" x="'+(b[0]-4)+'" y="'+(b[1]-3)+'" width="'+(b[2]-b[0]+8)+'" height="'+(b[3]-b[1]+6)+'" rx="2"/>'
+          +'<rect class="hit" x="'+(b[0]-4)+'" y="'+(b[1]-3)+'" width="'+(b[2]-b[0]+8)+'" height="'+(b[3]-b[1]+6)+'"/></g>';});});
+    h+='<g class="names"></g>';
+    svg.innerHTML=h;
+    const id=F.id,put=t=>{if(F.id===id){svg.querySelector('.names').innerHTML=t;if(svg.classList.contains('focus'))repaint();}};
+    if(NM[id])put(NM[id]);else fetch('i/fam-'+id+'.svg').then(r=>r.text()).then(t=>{NM[id]=t;put(t);}).catch(()=>{});
+  }
+  function drawMini(){
+    const [x0,y0,x1,y1]=F.box;msvg.setAttribute('viewBox',x0+' '+y0+' '+(x1-x0)+' '+(y1-y0));
+    msvg.innerHTML=F.segs.map(s=>'<line x1="'+s[0]+'" y1="'+s[1]+'" x2="'+s[2]+'" y2="'+s[3]+'"/>').join('');
+  }
+  function buildGens(){
+    gens.querySelectorAll('button').forEach(b=>b.remove());
+    const G=[...new Set(F.P.map(p=>p.g))].sort((a,b)=>a-b);
+    G.forEach(g=>{const b=document.createElement('button');b.type='button';b.textContent=g;b.setAttribute('aria-pressed','false');b.setAttribute('aria-label',g+'.ª geração');
+      b.onclick=()=>{gsel=gsel===g?null:g;sel=null;gens.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',+x.textContent===gsel?'true':'false'));gsel?showGen(gsel):(clear(),idle());};gens.appendChild(b);});
+  }
+  const fitZ=()=>{const [x0,y0,x1,y1]=F.box;return Math.min(1,stage.clientWidth/(stage.clientHeight*(x1-x0)/(y1-y0)));};
+  function size(keep){
+    const [x0,y0,x1,y1]=F.box,W=x1-x0,H=y1-y0;
+    const fx=keep?(stage.scrollLeft+stage.clientWidth/2)/Math.max(1,stage.scrollWidth):0,fy=keep?(stage.scrollTop+stage.clientHeight/2)/Math.max(1,stage.scrollHeight):0;
+    const h=Math.max(1,stage.clientHeight*z);svg.style.height=h+'px';svg.style.width=(h*W/H)+'px';
+    if(keep){stage.scrollLeft=fx*stage.scrollWidth-stage.clientWidth/2;stage.scrollTop=fy*stage.scrollHeight-stage.clientHeight/2;}
+    updView();
+  }
+  function updView(){
+    const sw=Math.max(1,stage.scrollWidth),sh=Math.max(1,stage.scrollHeight);
+    view.style.left=(stage.scrollLeft/sw*100)+'%';view.style.width=Math.min(100,stage.clientWidth/sw*100)+'%';
+  }
+  host.querySelectorAll('[data-z]').forEach(b=>b.onclick=()=>{const m=b.dataset.z;z=m==='in'?Math.min(4,z*1.4):m==='out'?Math.max(fitZ(),z/1.4):fitZ();size(true);});
+  stage.addEventListener('scroll',updView,{passive:true});
+  mini.addEventListener('click',e=>{const r=mini.getBoundingClientRect();stage.scrollTo({left:(e.clientX-r.left)/r.width*stage.scrollWidth-stage.clientWidth/2,behavior:'smooth'});});
+  /* arrastar para percorrer */
+  let drag=null,moved=false;
+  stage.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0)return;drag={x:e.clientX,y:e.clientY,l:stage.scrollLeft,t:stage.scrollTop};moved=false;});
+  addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4){moved=true;stage.classList.add('drag');}stage.scrollLeft=drag.l-dx;stage.scrollTop=drag.t-dy;});
+  addEventListener('pointerup',()=>{drag=null;stage.classList.remove('drag');});
+  /* ligações */
+  function lineage(k){
+    const on=new Set([k]),segs=new Set(F.P[k].up);
+    const up=[...F.P[k].p];while(up.length){const q=up.pop();if(on.has(q))continue;on.add(q);F.P[q].up.forEach(s=>segs.add(s));up.push(...F.P[q].p);}
+    const dn=[...F.P[k].k];while(dn.length){const q=dn.pop();if(on.has(q))continue;on.add(q);F.P[q].up.forEach(s=>segs.add(s));dn.push(...F.P[q].k);}
+    F.P[k].s.forEach(s=>on.add(s));
+    return {on,segs};
+  }
+  let last=null;
+  function repaint(){if(last)paint(...last);}
+  function paint(on,segs,me){
+    last=[on,segs,me];
+    svg.classList.add('focus');
+    svg.querySelectorAll('.nm').forEach(g=>{const k=+g.dataset.k;g.classList.toggle('on',on.has(k));g.classList.toggle('me',k===me);});
+    svg.querySelectorAll('.pp').forEach(g=>{const k=+g.dataset.k;g.classList.toggle('on',on.has(k));g.classList.toggle('me',k===me);});
+    svg.querySelectorAll('.sg').forEach(l=>l.classList.toggle('on',segs.has(+l.dataset.i)));
+    svg.querySelectorAll('.cp').forEach(c=>{const m=cpm[+c.dataset.i];c.classList.toggle('on',m.length>0&&m.every(k=>on.has(k)));});
+  }
+  function clear(){last=null;svg.classList.remove('focus');svg.querySelectorAll('.on,.me').forEach(e=>e.classList.remove('on','me'));}
+  function idle(){
+    const G=new Set(F.P.map(p=>p.g)).size;
+    card.innerHTML='<p class="mono">'+F.t+'</p><p>'+F.P.length+' pessoas · '+F.cp.length+' casais · '+G+' gerações</p><p>Passa por uma pessoa para ver as suas ligações. Clica para fixar.</p>';
+  }
+  function showGen(g){
+    const on=new Set(F.P.map((p,k)=>p.g===g?k:-1).filter(k=>k>=0));paint(on,new Set(),-1);
+    card.innerHTML='<div class="code">'+g+'.ª</div><p>geração · '+on.size+' pessoas</p>';
+  }
+  function show(k){
+    const p=F.P[k],L=lineage(k);paint(L.on,L.segs,k);
+    const sib=new Set();p.p.forEach(q=>F.P[q].k.forEach(c=>{if(c!==k)sib.add(c);}));
+    F.grp.forEach(g=>{if(g.m.includes(k))g.m.forEach(m=>{if(m!==k)sib.add(m);});});
+    const row=(t,a)=>a.length?'<dt>'+t+'</dt><dd>'+a.map(q=>'<button type="button" data-k="'+q+'">'+code(F.P[q])+'</button>').join('')+'</dd>':'';
+    const U=p.cp.map(c=>{const o=cpm[c].filter(q=>q!==k);const m=F.mk.find(m=>Math.abs(m[0]-F.cp[c][0])<20&&F.cp[c][1]-m[1]>-3&&F.cp[c][1]-m[1]<22);return{o,ord:m?parseInt(m[2]):0,sep:F.cp[c][3]};}).sort((a,b)=>a.ord-b.ord);
+    let uni='';if(U.length){uni='<dt>'+(U.length>1?'Uniões':'União')+'</dt><dd class="un">'+U.map(u=>'<div>'+(u.ord?'<span class="ux">'+u.ord+'.ª</span>':'')+(u.o.length?u.o.map(q=>'<button type="button" data-k="'+q+'">'+code(F.P[q])+'</button>').join(''):'<span class="ux">(?)</span>')+(u.sep?'<span class="ux">separados</span>':'')+'</div>').join('')+'</dd>';}
+    else if(p.s.length)uni=row('Cônjuge',p.s);
+    card.innerHTML='<div class="code">'+code(p)+'</div><p class="mono">'+(p.u?'Pessoa não identificada · ':'')+p.g+'.ª geração</p><dl>'+row('Pais',p.p)+uni+row('Irmãos',[...sib])+row('Filhos',p.k)+'</dl>';
+  }
+  function center(k){
+    const b=F.P[k].b[0],[x0,y0,x1,y1]=F.box,s=svg.clientHeight/(y1-y0);
+    stage.scrollTo({left:((b[0]+b[2])/2-x0)*s-stage.clientWidth/2,top:((b[1]+b[3])/2-y0)*s-stage.clientHeight/2,behavior:'smooth'});
+  }
+  svg.addEventListener('pointerover',e=>{const g=e.target.closest('.pp');if(!g||sel!==null||gsel)return;show(+g.dataset.k);});
+  svg.addEventListener('pointerout',e=>{const g=e.target.closest('.pp');if(!g||sel!==null||gsel)return;if(e.relatedTarget&&g.contains(e.relatedTarget))return;clear();idle();});
+  svg.addEventListener('click',e=>{if(moved){moved=false;return;}const g=e.target.closest('.pp');
+    if(g){const k=+g.dataset.k;gsel=null;gens.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));if(sel===k){sel=null;clear();idle();}else{sel=k;show(k);}}
+    else if(sel!==null||gsel){sel=null;gsel=null;gens.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed','false'));clear();idle();}});
+  svg.addEventListener('focusin',e=>{const g=e.target.closest('.pp');if(g&&sel===null)show(+g.dataset.k);});
+  svg.addEventListener('keydown',e=>{const g=e.target.closest('.pp');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();sel=+g.dataset.k;show(sel);}});
+  card.addEventListener('click',e=>{const b=e.target.closest('button[data-k]');if(!b)return;sel=+b.dataset.k;gsel=null;show(sel);center(sel);});
+  addEventListener('resize',()=>{if(host.offsetParent)size(true);});
+  addEventListener('viewchange',()=>{if(host.offsetParent)requestAnimationFrame(()=>size());});
+  load(0);
+}
+
+
+/* epílogo: imagens do trabalho a passar no canto inferior esquerdo */
+(function(){
+  const pg=document.getElementById('cap-05');if(!pg)return;
+  const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const groups=[];C.forEach(ch=>{if(ch.n==='05')return;ch.secs.forEach(s=>{if(s.items.length)groups.push(sh(s.items.map(([f])=>[f,s.c,s.t])));});});
+  groups.push(sh([1,2,3,4,5,6,7,8].map(n=>['pessoa-'+n+'.jpg','03','Pessoas'])));
+  /* um pouco de tudo: alterna entre secções (paisagens, memória, pessoas, objetos) */
+  const pool=[];let left=true;for(let r=0;left;r++){left=false;sh(groups.map((g,i)=>i)).forEach(i=>{if(r<groups[i].length){pool.push(groups[i][r]);left=true;}});}
+  const box=document.createElement('a');box.className='reel';box.setAttribute('aria-label','Imagens do trabalho');
+  box.innerHTML='<img alt=""><img alt=""><span class="reel-c mono"></span>';pg.appendChild(box);
+  const im=[...box.querySelectorAll('img')],cap=box.querySelector('.reel-c');
+  let i=0,a=0,timer=0;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function step(){const [f,c,t]=pool[i%pool.length];i++;const nx=im[1-a];nx.onload=()=>{nx.classList.add('on');im[a].classList.remove('on');a=1-a;cap.textContent=c+' '+t;box.href='#'+(c==='03'?'cap-03':sid(c));};nx.src='i/'+f;}
+  function run(){clearInterval(timer);if(pg.hidden)return;step();if(!reduce)timer=setInterval(step,600);}
+  addEventListener('viewchange',run);run();
+})();
+
+
+/* Não pares a história — formulário de contributos com aprovação */
+(function(){
+  const sec=document.getElementById('historia');if(!sec)return;
+  const $=s=>sec.querySelector(s);
+  const form=$('#h-form'),msg=$('#h-msg'),gate=$('#h-gate'),feed=$('#h-feed'),queue=$('#h-queue'),qwrap=$('#h-qwrap'),filesIn=$('#h-imgs'),prev=$('#h-prev');
+  const capSel=$('#h-cap');
+  C.forEach(c=>{const o=document.createElement('option');o.value=c.n;o.textContent=c.n+'. '+c.t;capSel.appendChild(o);});
+  let db=null,user=null,assets=null,uid=null,approved=[];
+  const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const capName=n=>{const c=C.find(c=>c.n===n);return c?c.n+'. '+c.t:'';};
+  function setGate(t){gate.textContent=t;gate.hidden=!t;}
+  function disable(on){form.querySelectorAll('input,textarea,select,button').forEach(e=>e.disabled=on);}
+  setGate('A ligar…');disable(true);
+
+  filesIn.addEventListener('change',()=>{const fs=[...filesIn.files].slice(0,4);prev.innerHTML='';fs.forEach(f=>{const u=URL.createObjectURL(f);const im=document.createElement('img');im.src=u;im.alt='';prev.appendChild(im);});if(filesIn.files.length>4){msg.textContent='Só as primeiras 4 imagens serão enviadas.';}});
+
+  function card(it,extra){
+    const imgs=(it.imgs||[]).map(id=>'<img src="/_blob/'+esc(id)+'" alt="" loading="lazy">').join('');
+    return '<article class="h-card"><header class="mono"><span>'+esc(capName(it.cap))+'</span><span>'+esc(it.ano||'')+'</span></header>'
+      +(imgs?'<div class="h-imgs">'+imgs+'</div>':'')
+      +'<p>'+esc(it.texto).replace(/\n/g,'<br>')+'</p>'
+      +'<footer class="mono">'+esc(it.nome||'Anónimo')+(it.ligacao?' · '+esc(it.ligacao):'')+'</footer>'+(extra||'')+'</article>';
+  }
+  function renderApproved(){
+    const list=[...approved].sort((a,b)=>(b.ts||0)-(a.ts||0));
+    feed.innerHTML=list.length?list.map(it=>card(it)).join(''):'<p class="h-empty">Ainda não há histórias publicadas. A primeira pode ser a tua.</p>';
+    document.querySelectorAll('.contrib').forEach(e=>e.remove());
+    C.forEach(c=>{const mine=list.filter(it=>it.cap===c.n);if(!mine.length)return;const pg=document.getElementById(sid(c.n));if(!pg)return;
+      const box=document.createElement('section');box.className='contrib';box.innerHTML='<h3 class="mono">Contributos da comunidade · '+mine.length+'</h3><div class="h-grid">'+mine.map(it=>card(it)).join('')+'</div>';
+      const pager=pg.querySelector('.pager');pg.insertBefore(box,pager);});
+  }
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();if(!db||!uid)return;
+    const fd=new FormData(form),texto=(fd.get('texto')||'').toString().trim();
+    if(texto.length<5){msg.textContent='Escreve a tua história antes de enviar.';return;}
+    if(!fd.get('consent')){msg.textContent='Confirma que autorizas a publicação depois de revista.';return;}
+    disable(true);msg.textContent='A enviar…';
+    try{
+      const ids=[];
+      if(assets){for(const f of [...filesIn.files].slice(0,4)){if(!f.type.startsWith('image/'))continue;const r=await assets.upload(f);ids.push(r.id);}}
+      const it={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),nome:(fd.get('nome')||'').toString().trim().slice(0,80),ligacao:(fd.get('ligacao')||'').toString(),cap:(fd.get('cap')||'').toString(),ano:(fd.get('ano')||'').toString().slice(0,4),texto:texto.slice(0,4000),imgs:ids,ts:Date.now(),estado:'pendente'};
+      const ref=db.doc('envios/'+uid);const cur=await ref.get();const items=cur.exists?[...(cur.data().items||[])]:[];items.push(it);
+      await ref.set({items});
+      form.reset();prev.innerHTML='';msg.textContent='Obrigada. A tua história foi recebida e aparece no site depois de revista.';
+    }catch(err){msg.textContent=err&&err.code==='quota_exceeded'?'O arquivo está cheio de momento. Tenta mais tarde.':'Não foi possível enviar. Tenta outra vez daqui a pouco.';}
+    disable(false);
+  });
+  async function moderate(){
+    qwrap.hidden=false;
+    db.collection('envios').onSnapshot(snap=>{
+      const pend=[];snap.docs.forEach(d=>(d.data().items||[]).forEach(it=>{if(it.estado==='pendente')pend.push({...it,_d:d.id});}));
+      pend.sort((a,b)=>a.ts-b.ts);
+      $('#h-qn').textContent=pend.length;
+      queue.innerHTML=pend.length?pend.map(it=>card(it,'<div class="h-act"><button type="button" data-a="ok" data-d="'+esc(it._d)+'" data-i="'+esc(it.id)+'">Aprovar</button><button type="button" data-a="no" data-d="'+esc(it._d)+'" data-i="'+esc(it.id)+'">Rejeitar</button></div>')).join(''):'<p class="h-empty">Nada por rever.</p>';
+    },()=>{queue.innerHTML='<p class="h-empty">Não foi possível carregar a fila.</p>';});
+    queue.addEventListener('click',async e=>{const b=e.target.closest('button[data-a]');if(!b)return;b.disabled=true;
+      try{const ref=db.doc('envios/'+b.dataset.d);const s=await ref.get();const items=[...(s.data().items||[])].map(x=>({...x}));const it=items.find(x=>x.id===b.dataset.i);if(!it)return;
+        if(b.dataset.a==='ok'){const {estado,...pub}=it;await db.doc('aprovados/'+it.id).set(pub);it.estado='aprovado';}else it.estado='rejeitado';
+        await ref.set({items});}catch(_){b.disabled=false;}});
+  }
+  (async()=>{
+    if(!window.claude){setGate('O formulário vai estar disponível em breve.');feed.innerHTML='<p class="h-empty">Ainda não há histórias publicadas.</p>';return;}
+    [db,user]=await Promise.all([claude.use('db'),claude.use('user')]);
+    if(!db){setGate('As histórias publicadas e o formulário só aparecem a quem abre o site com sessão iniciada.');feed.innerHTML='';return;}
+    db.collection('aprovados').onSnapshot(s=>{approved=s.docs.map(d=>d.data());renderApproved();},()=>{});
+    uid=user?await user.id():null;
+    const canWrite=user?await user.can('data.write'):null;
+    if(!uid||canWrite===false){setGate('Podes ler as histórias, mas para enviar a tua precisas de acesso de colaboração ao site.');}
+    else{setGate('');disable(false);assets=await claude.use('assets');if(!assets){filesIn.closest('.h-field').hidden=true;}}
+    if(user&&await user.canEdit())moderate();
+  })();
+})();
+
+MODS.forEach(f=>f());
+route();
+</script>
+
+</body></html>
