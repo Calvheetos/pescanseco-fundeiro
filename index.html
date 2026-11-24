@@ -27,6 +27,8 @@
 .ds-pop p .ds-ar{font-style:normal;color:#717b6e;margin:0 6px}
 .ds-nm.ds-nx{padding-top:clamp(40px,7vh,72px)!important;padding-bottom:clamp(40px,7vh,72px)!important}
 .ds-pop p.no{color:#717b6e;font-size:14px}
+/* Inter: letras mais juntas; títulos grandes usam o corte Display (mais apertado) */
+body{letter-spacing:-.02em;font-optical-sizing:auto}
 </style>
 <title>Pescanseco Fundeiro</title>
 <link rel="icon" href="favicon.ico?v=frame2" sizes="any">
@@ -35,13 +37,13 @@
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=frame2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..500;1,14..32,300..500&family=Geist+Mono:wght@400&display=swap">
 <style>
 /* Layout: o site segue o livro. Página inicial com a aldeia; índice só com os capítulos; cada capítulo abre como no livro (foto à esquerda, sumário à direita) e depois mostra as imagens secção a secção. */
 :root{
   --paper:#ffffff; --ink:#111111; --mute:#bdbdb8; --rule:#dcdcd7; --ink-2:#76786f; --accent:#142916; --sheet:#e3e3e3; --veil:rgba(255,255,255,.97);
-  --text:"ABC Monument Grotesk","Monument Grotesk","Geist","Helvetica Neue",Arial,sans-serif;
-  --mono:"ABC Monument Grotesk Mono","Geist Mono",ui-monospace,Menlo,monospace;
+  --text:"Inter","Helvetica Neue",Arial,sans-serif;
+  --mono:"Geist Mono",ui-monospace,Menlo,monospace;
   --gl:max(14px,env(safe-area-inset-left,0px)); --gr:max(14px,env(safe-area-inset-right,0px));
   --row:clamp(100px,14vw,220px); --gap:6px; --bar:41px;
   color-scheme:light;
